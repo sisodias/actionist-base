@@ -1,7 +1,7 @@
 # AFFiNE framework closure handoff
 
-Run: `affine-acceptance-2026-08-29-final`  
-Scope: Actionist Base at `/w/knowledge-local-workspace/knowledge`, compiled same-document AFFiNE/SISO Knowledge module, donor-native Knowledge backend, disposable loopback issuer.  
+Run: `affine-acceptance-2026-08-29-final`
+Scope: Actionist Base at `/w/knowledge-local-workspace/knowledge`, compiled same-document AFFiNE/SISO Knowledge module, donor-native Knowledge backend, disposable loopback issuer.
 Verdict: `PARTIAL_PASS_WITH_HELD_GATES`. The observed local browser gates pass. The reusable framework now records the proven seams. Qualification remains `NOT_QUALIFIED`; registry admission remains `NOT_ADMITTED`; release remains `DRAFT`.
 
 ## Acceptance verdict table

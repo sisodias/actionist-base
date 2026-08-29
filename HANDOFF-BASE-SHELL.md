@@ -1,8 +1,8 @@
 # Actionist Base shell handoff
 
-Status: **PASS**  
-Lane: `BASE-SHELL-LUNA`  
-Branch: `feat/base-shell-tokens`  
+Status: **PASS**
+Lane: `BASE-SHELL-LUNA`
+Branch: `feat/base-shell-tokens`
 Date: 2026-08-29
 
 ## Result

@@ -62,11 +62,3 @@ export async function runBlockLifecycle(block: BlockMount, target: HTMLElement, 
   if (!active()) return () => undefined;
   return block.mount(target, context, bindings);
 }
-  onHealth({ status: 'loading' });
-  await block.preload?.();
-  if (!active()) return () => undefined;
-  const health = await block.health?.(context, bindings);
-  if (health) { onHealth(health); if (health.status === 'unavailable' || health.status === 'error') return () => undefined; }
-  if (!active()) return () => undefined;
-  return block.mount(target, context, bindings);
-}

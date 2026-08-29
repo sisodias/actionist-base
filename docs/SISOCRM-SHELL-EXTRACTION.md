@@ -1,7 +1,7 @@
 # SISOCRM shell extraction record
 
-Audit date: 2026-08-29  
-Target: `actionist-base-shell-worktree` (`feat/base-shell-tokens`)  
+Audit date: 2026-08-29
+Target: `actionist-base-shell-worktree` (`feat/base-shell-tokens`)
 Donor: `/Users/shaansisodia/SISO_Workspace/SISO_Agency/apps/SISOCRM/product-app`
 
 This is a shell-only extraction. SISOCRM remains the donor application and is
