@@ -1,0 +1,10 @@
+Issuer/backend fail-closed status receipt (values of the disposable session cookie omitted):
+
+issuer missing session: 401
+issuer revoked session: 401
+issuer missing context: 401
+issuer revoked context: 401
+donor backend missing auth methods: 401
+donor backend revoked auth methods: 401
+
+The browser revoke action returned to the host Knowledge route, and the next context request rendered `Block error` with `Knowledge identity unavailable (401)`. No donor login surface appeared.

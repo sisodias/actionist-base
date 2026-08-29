@@ -31,6 +31,14 @@ export const fixtureBindings: RuntimeBindings = { apiBaseUrl: '', identity: { is
 
 export type ShellProps = { recipe: ProductRecipe; active?: string; children: ReactNode; onNavigate: (route: string) => void };
 
+export async function cleanupBlockMount(target: HTMLElement, unmount?: Unmount | null) {
+  try {
+    await unmount?.();
+  } finally {
+    target.replaceChildren();
+  }
+}
+
 export async function runBlockLifecycle(block: BlockMount, target: HTMLElement, context: HostContext, bindings: RuntimeBindings, onHealth: (health: Health) => void): Promise<Unmount> {
   onHealth({ status: 'loading' });
   await block.preload?.();

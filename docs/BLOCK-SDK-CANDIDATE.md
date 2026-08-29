@@ -10,11 +10,17 @@ This is an experimental, internal candidate extracted from the Actionist Base/AF
 - The lifecycle seam is ordered: `preload → establish session → inspect session → semantic health → mount → cleanup`.
 - Unavailable, error, unauthenticated, expired, wrong-workspace, and missing-capability states fail closed rather than mounting.
 - A session adapter can expose establish, inspect/read-back, and revoke operations.
+- Same-document donor packages need embed configuration established before donor evaluation; queryless internal navigation must retain only non-secret embed state.
+- Semantic health must compare the donor backend's authenticated principal/workspace read-back with the issuer identity; a successful status code alone is insufficient.
+- Page and worker/realtime transports are separate seams. A compiled worker needs its own nested backend/socket rewrite, even when the page fetch bridge is correct.
+- Cleanup must await donor unmount before host DOM clearing, and must revoke/discard the session after that ordered teardown even when unmount throws.
+- Browser acceptance is the evidence boundary: create/edit/reload, backend restart persistence, donor-chrome absence, and fail-closed negative paths are not inferred from unit tests or HTTP 200 responses.
 
 ## Not yet proven
 
 - The candidate has only been exercised against the local AFFiNE fixture; it is not a production auth broker or compatibility guarantee.
 - Session revocation semantics, refresh, concurrent mounts, retries, and cross-tab ownership are unverified.
+- A direct browser network receipt for worker-only/realtime requests is not yet captured; the current local proof combines artifact markers with the completed workflow.
 - Namespace isolation and owner enforcement are descriptors and checks, not infrastructure enforcement.
 - Teable has no adapter here; connector behavior, workspace semantics, and health/read-back guarantees remain unknown.
 - Capability names, error taxonomy, and mount options may need a host-specific compatibility layer.

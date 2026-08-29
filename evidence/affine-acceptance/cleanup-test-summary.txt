@@ -1,0 +1,6 @@
+Ordered cleanup receipt:
+
+npm test -- --run: 4 test files, 25 tests passed.
+src/host.test.ts proves the donor unmount observes childElementCount=1 before cleanup clears the target.
+src/sdk/core.test.ts proves the same SDK ordering and proves a throwing unmount still clears the target and revokes once.
+The browser route teardown produced the expected Vite donor stop event and no React removeChild crash.

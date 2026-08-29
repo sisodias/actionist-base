@@ -1,0 +1,148 @@
+{
+  "schema_version": "actionist.affine.acceptance.v1",
+  "run_id": "affine-acceptance-2026-08-29-final",
+  "recorded_at": "2026-08-29",
+  "verdict": "PARTIAL_PASS_WITH_HELD_GATES",
+  "safe_for_user_verification": false,
+  "user_verification": {
+    "status": "RESET_REQUIRED_FOR_POSITIVE_FLOW",
+    "reason": "The disposable issuer session is intentionally revoked after the negative acceptance gate.",
+    "reset": "Restart node siso/issuer.mjs only; persisted donor data and the compiled artifact do not need reset."
+  },
+  "scope": "local loopback Actionist Base + compiled same-document AFFiNE module + donor-native Knowledge backend",
+  "browser": {
+    "positive_context": "affine-positive-final-20260829",
+    "negative_context": "affine-negative-20260829",
+    "positive_url": "http://127.0.0.1:4179/w/knowledge-local-workspace/knowledge",
+    "wrong_workspace_url": "http://127.0.0.1:4179/w/wrong-workspace/knowledge",
+    "positive_console": { "errors": 0, "warnings": 0, "info_only": true },
+    "positive_dom": { "iframe_count": 0, "donor_login_present": false, "donor_marketing_or_download_present": false },
+    "positive_health": "healthy",
+    "revoked_console": { "errors": 2, "warnings": 0, "expected": ["donor teardown manually-stop", "issuer context 401 after revoke"] }
+  },
+  "document": {
+    "title": "Actionist AFFiNE Acceptance final 2026-08-29 2253",
+    "body": "Final acceptance body — created, edited, reloaded, and persisted across backend restart.",
+    "create_edit": "PASS",
+    "reload_find_reopen": "PASS",
+    "backend_restart_reload_find_reopen": "PASS"
+  },
+  "services": {
+    "host": { "url": "http://127.0.0.1:4179", "pid": 19504 },
+    "compiled_module": { "url": "http://127.0.0.1:4601", "pid": 40342 },
+    "donor_backend_wrapper_after_restart": { "url": "http://127.0.0.1:3012", "pid": 50454, "listener_pid": 50486 },
+    "issuer": { "url": "http://127.0.0.1:4320", "pid": 10236 },
+    "backend_restart": { "before_wrapper_pid": 95831, "after_wrapper_pid": 50454, "verified_status": 200 }
+  },
+  "gates": [
+    {
+      "gate_id": "A1-auth-topology-and-readback",
+      "verdict": "PASS",
+      "observed": "Host session established issuer context; client, principal, workspace, expiry and capabilities were validated; backend auth and GraphQL workspace read-back returned 200 and semantic health was healthy.",
+      "evidence": ["final-backend-restart-persisted.yml", "console-summary.md", "network-summary.md"]
+    },
+    {
+      "gate_id": "A2-same-document-mount",
+      "verdict": "PASS",
+      "observed": "Compiled AFFiNE mounted into the host block target on the non-root workspace route; DOM contained no iframe and no donor login/marketing/download chrome.",
+      "evidence": ["artifact-clean-reopened.png", "artifact-clean-reopened.yml"]
+    },
+    {
+      "gate_id": "A3-create-edit-save",
+      "verdict": "PASS",
+      "observed": "A uniquely named document was created and its title and body were edited in the fresh positive browser context; host health remained healthy.",
+      "evidence": ["final-created-edited.png"]
+    },
+    {
+      "gate_id": "A4-reload-find-reopen",
+      "verdict": "PASS",
+      "observed": "Browser reload returned All docs, the unique title/body were found, the document was reopened, and both inline editors matched the saved values.",
+      "evidence": ["reloaded-found.png", "final-backend-restart-persisted.yml"]
+    },
+    {
+      "gate_id": "A5-backend-restart-persistence",
+      "verdict": "PASS",
+      "observed": "Backend wrapper 95831 was terminated; wrapper 50454 and listener 50486 served port 3012; reload/find/reopen returned the same unique title/body with healthy semantic health.",
+      "evidence": ["artifact-clean-reopened.png", "artifact-clean-reopened.yml"]
+    },
+    {
+      "gate_id": "A6-page-assets-and-backend-prefix",
+      "verdict": "PASS",
+      "observed": "Positive browser network captured issuer 200, backend auth/GraphQL/document 200, nested module paths, and 30 nested font requests with 200; no root /fonts failure occurred.",
+      "evidence": ["network-summary.md"]
+    },
+    {
+      "gate_id": "A7-worker-asset-and-rewrite",
+      "verdict": "PASS_WITH_HOLD",
+      "observed": "Worker asset loaded at the nested module path; generated worker JavaScript contains the backend request/socket bridge and the completed CRUD workflow depended on it.",
+      "held": "A separate worker-only request/response trace was not captured by the browser CLI and remains unproven.",
+      "evidence": ["network-summary.md", "artifact-checks.json"]
+    },
+    {
+      "gate_id": "A8-wrong-workspace-denial",
+      "verdict": "PASS",
+      "observed": "Fresh wrong-workspace context rendered Workspace denied, made no issuer/backend API request, and showed no donor login/chrome; console had zero errors and warnings.",
+      "evidence": ["wrong-workspace-denied.png", "wrong-workspace-denied.yml"]
+    },
+    {
+      "gate_id": "A9-missing-and-revoked-session",
+      "verdict": "PASS",
+      "observed": "Settings revoke action returned the host to Knowledge; context fetch then failed closed as Block error / 401. Direct missing and revoked issuer context/session and donor auth-method probes all returned 401.",
+      "evidence": ["artifact-clean-session-revoked.png", "artifact-clean-session-revoked.yml", "auth-negative-status.txt"]
+    },
+    {
+      "gate_id": "A10-donor-login-unreachable",
+      "verdict": "PASS",
+      "observed": "Positive, wrong-workspace and revoked terminal states presented no donor sign-in/login/download/marketing surface; the host owns the only tested session/revoke action.",
+      "evidence": ["artifact-clean-reopened.png", "wrong-workspace-denied.yml", "artifact-clean-session-revoked.yml"]
+    },
+    {
+      "gate_id": "A11-ordered-cleanup",
+      "verdict": "PASS",
+      "observed": "Host and SDK regression tests prove donor unmount observes populated DOM before host clearing; clearing occurs in finally and session revoke follows teardown. Browser route teardown produced no removeChild crash.",
+      "evidence": ["cleanup-test-summary.txt"]
+    },
+    {
+      "gate_id": "A12-clean-positive-browser",
+      "verdict": "PASS",
+      "observed": "Fresh positive browser context completed final create/edit/reload/restart flow with zero console errors and zero warnings.",
+      "evidence": ["console-summary.md"]
+    }
+  ],
+  "negative_probes": {
+    "wrong_client": "PACKAGE_TESTED",
+    "expired_context": "PACKAGE_TESTED",
+    "missing_capability": "PACKAGE_TESTED",
+    "wrong_workspace_host_route": "PASS",
+    "missing_host_session": "PASS",
+    "revoked_host_session": "PASS",
+    "two_identity_data_isolation": "HELD"
+  },
+  "artifact": {
+    "path": "../../../apps/siso-knowledge/dist/siso-knowledge-module.js",
+    "entry_sha256": "382721b5d0b92bb768e479397c6dc5d1f94d03ae72d15c7ea59ab1ee88fd971c",
+    "manifest_path": "../../../apps/siso-knowledge/dist/package-manifest.json",
+    "manifest_sha256": "0aa36f1078128cf7bd9dbdd41ff72a7923d4b825d745e6ae2f4659ed534ca7f7",
+    "files": 1007,
+    "bytes": 215080775,
+    "donor_head": "d1dca9fcfaf4395900aa0f37fc3cdd4435bf8ee9",
+    "adaptation_patch_sha256": "eb3bf704d6e6c458ac6d0b665ed0688e9d526d3792af323ebcacaa7de2c47b76"
+  },
+  "verification": {
+    "typecheck": "PASS",
+    "unit_tests": { "status": "PASS", "files": 4, "tests": 25 },
+    "donor_patch_apply_check": "PASS",
+    "donor_build": "PASS",
+    "evidence_secret_scan": "PASS:0 matches",
+    "artifact_secret_scan": "PASS:0 matches",
+    "artifact_absolute_path_scan": "PASS:0 host checkout paths after build-root normalization",
+    "actionist_source_absolute_path_scan": "PASS:0 matches excluding git metadata"
+  },
+  "holds": [
+    "direct worker/realtime request trace",
+    "two-identity cross-workspace/data isolation",
+    "browser wrong-client/expired/missing-capability probes",
+    "rights/provenance, mobile/accessibility, donor upgrade replay, rollback rehearsal and human admission"
+  ],
+  "secrets_policy": "No token, cookie value, signed assertion, credential value or raw credential header is stored in this receipt or sibling evidence files."
+}

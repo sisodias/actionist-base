@@ -1,0 +1,155 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: A
+      - generic [ref=e7]:
+        - generic [ref=e8]: Actionist
+        - generic [ref=e9]: Base workspace
+    - navigation [ref=e10]:
+      - generic [ref=e11]:
+        - button "Workspace" [ref=e12] [cursor=pointer]:
+          - generic [ref=e13]: Workspace
+        - button "Overview" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - text: Overview
+        - button "Knowledge" [ref=e18] [cursor=pointer]:
+          - img [ref=e19]
+          - text: Knowledge
+        - button "Fixture block" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+          - text: Fixture block
+    - button "Settings" [ref=e25] [cursor=pointer]:
+      - img [ref=e26]
+      - text: Settings
+  - main [ref=e29]:
+    - generic [ref=e30]: Workspace / DemoFixture session · no production auth
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - generic [ref=e35]: Knowledge
+        - generic [ref=e36]: healthy
+      - generic [ref=e37]:
+        - region "Notifications alt+T"
+        - generic [ref=e39]:
+          - navigation [ref=e42]:
+            - generic [ref=e44]:
+              - button [ref=e46] [cursor=pointer]:
+                - img [ref=e48]
+              - generic [ref=e50]:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: SISO Docs
+                          - generic:
+                            - generic:
+                              - img
+                              - text: Syncing...
+              - button [ref=e51] [cursor=pointer]:
+                - img [ref=e53]
+            - generic [ref=e55]:
+              - generic [ref=e56]:
+                - link "All docs" [ref=e57] [cursor=pointer]:
+                  - /url: /workspace/knowledge-local-workspace/all
+                  - generic [ref=e58]:
+                    - img [ref=e60]
+                    - generic [ref=e62]: All docs
+                - link "Journals" [ref=e63] [cursor=pointer]:
+                  - /url: /workspace/knowledge-local-workspace/journals
+                  - generic [ref=e64]:
+                    - img [ref=e66]
+                    - generic [ref=e68]: Journals
+              - generic [ref=e73]:
+                - generic [ref=e74]:
+                  - switch "Favorites" [ref=e75] [cursor=pointer]:
+                    - generic [ref=e76]:
+                      - text: Favorites
+                      - img [ref=e77]
+                    - button [ref=e80]:
+                      - img [ref=e82]
+                  - generic [ref=e87]:
+                    - img [ref=e89]
+                    - generic [ref=e91]: No favorites
+                - generic [ref=e92]:
+                  - switch "Organize" [ref=e93] [cursor=pointer]:
+                    - generic [ref=e94]:
+                      - text: Organize
+                      - img [ref=e95]
+                    - button [ref=e98]:
+                      - img [ref=e100]
+                  - generic [ref=e105]:
+                    - img [ref=e108]
+                    - generic [ref=e114]: No folders
+                    - button "New folder" [ref=e115] [cursor=pointer]:
+                      - generic [ref=e116]: New folder
+                - switch "Tags" [ref=e118] [cursor=pointer]:
+                  - generic [ref=e119]:
+                    - text: Tags
+                    - img [ref=e120]
+                  - button [ref=e124]:
+                    - img [ref=e126]
+                - switch "Collections" [ref=e130] [cursor=pointer]:
+                  - generic [ref=e131]:
+                    - text: Collections
+                    - img [ref=e132]
+                  - button [ref=e135]:
+                    - img [ref=e137]
+                - generic [ref=e139]:
+                  - switch "Others" [ref=e140] [cursor=pointer]:
+                    - generic [ref=e141]:
+                      - text: Others
+                      - img [ref=e142]
+                  - generic [ref=e144]:
+                    - link "Trash" [ref=e145] [cursor=pointer]:
+                      - /url: /workspace/knowledge-local-workspace/trash
+                      - generic [ref=e146]:
+                        - img [ref=e149]
+                        - generic [ref=e157]: Trash
+                    - generic [ref=e158] [cursor=pointer]:
+                      - img [ref=e160]
+                      - generic [ref=e163]: Import
+                    - generic [ref=e164] [cursor=pointer]:
+                      - img [ref=e166]
+                      - generic [ref=e168]: Template
+          - generic [ref=e177]:
+            - generic [ref=e178]:
+              - button [ref=e179] [cursor=pointer]:
+                - img [ref=e181]
+              - generic [ref=e516]:
+                - img [ref=e518]
+                - generic [ref=e525]:
+                  - radiogroup [ref=e526]:
+                    - radio [checked] [ref=e527] [cursor=pointer]:
+                      - img [ref=e532]
+                    - radio [ref=e542] [cursor=pointer]:
+                      - img [ref=e547]
+                  - generic [ref=e562]: Actionist AFFiNE Acceptance 2026-08-29 2229
+                  - generic [ref=e563]:
+                    - button [ref=e564] [cursor=pointer]:
+                      - img [ref=e566]
+                    - button [ref=e568] [cursor=pointer]:
+                      - img [ref=e570]
+                    - button [ref=e572] [cursor=pointer]:
+                      - img [ref=e574]
+                  - button "Share" [ref=e577] [cursor=pointer]:
+                    - generic [ref=e579]:
+                      - img [ref=e580]
+                      - text: Share
+              - button [ref=e217] [cursor=pointer]:
+                - img [ref=e219]
+            - generic [ref=e589]:
+              - button "Select Icon" [ref=e591] [cursor=pointer]:
+                - generic [ref=e593]:
+                  - img [ref=e594]
+                  - generic: Add icon
+              - generic [ref=e607]: Actionist AFFiNE Acceptance 2026-08-29 2229
+              - button "Info" [ref=e611] [cursor=pointer]:
+                - generic [ref=e612]:
+                  - generic [ref=e613]: Info
+                  - img [ref=e615]
+              - generic [ref=e639]: Actionist AFFiNE acceptance body — create, edit, reload, and restart persistence proof.
+              - generic [ref=e643]:
+                - generic [ref=e644]: Bi-Directional Links
+                - button "Show" [ref=e645] [cursor=pointer]:
+                  - generic [ref=e646]: Show

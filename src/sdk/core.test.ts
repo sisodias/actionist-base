@@ -24,15 +24,17 @@ describe('internal block SDK candidate', () => {
       inspect: async () => { order.push('inspect'); return { authenticated: true, workspaceId: 'w' }; },
       revoke: async () => { order.push('revoke'); },
     };
+    const target = document.createElement('div');
     const cleanup = await runLifecycle({
       id: 'fixture',
       preload: async () => { order.push('preload'); },
       health: async () => { order.push('health'); return { status: 'healthy' }; },
-      mount: async target => { order.push('mount'); target.textContent = 'mounted'; return () => { order.push('unmount'); }; },
-    }, document.createElement('div'), context, adapter);
+      mount: async target => { order.push('mount'); target.innerHTML = '<span>mounted</span>'; return () => { order.push(`unmount:${target.childElementCount}`); }; },
+    }, target, context, adapter);
     expect(order).toEqual(['preload', 'establish', 'inspect', 'health', 'mount']);
     await cleanup();
-    expect(order).toEqual(['preload', 'establish', 'inspect', 'health', 'mount', 'unmount', 'revoke']);
+    expect(order).toEqual(['preload', 'establish', 'inspect', 'health', 'mount', 'unmount:1', 'revoke']);
+    expect(target.childElementCount).toBe(0);
   });
 
   it('does not mount unavailable sessions and revokes them immediately', async () => {
@@ -71,8 +73,10 @@ describe('internal block SDK candidate', () => {
       inspect: async () => ({ authenticated: true, workspaceId: 'w' }),
       revoke: async () => { revoked += 1; },
     };
-    const cleanup = await runLifecycle({ id: 'fixture', mount: async () => () => { throw new Error('unmount failed'); } }, document.createElement('div'), context, adapter);
+    const target = document.createElement('div');
+    const cleanup = await runLifecycle({ id: 'fixture', mount: async target => { target.innerHTML = '<span>mounted</span>'; return () => { throw new Error('unmount failed'); }; } }, target, context, adapter);
     await expect(cleanup()).rejects.toThrow('unmount failed');
     expect(revoked).toBe(1);
+    expect(target.childElementCount).toBe(0);
   });
 });

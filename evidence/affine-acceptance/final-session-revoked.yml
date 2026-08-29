@@ -1,0 +1,33 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: A
+      - generic [ref=e7]:
+        - generic [ref=e8]: Actionist
+        - generic [ref=e9]: Base workspace
+    - navigation [ref=e10]:
+      - generic [ref=e11]:
+        - button "Workspace" [ref=e12] [cursor=pointer]:
+          - generic [ref=e13]: Workspace
+        - button "Overview" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - text: Overview
+        - button "Knowledge" [ref=e18] [cursor=pointer]:
+          - img [ref=e19]
+          - text: Knowledge
+        - button "Fixture block" [ref=e21] [cursor=pointer]:
+          - img [ref=e22]
+          - text: Fixture block
+    - button "Settings" [ref=e25] [cursor=pointer]:
+      - img [ref=e26]
+      - text: Settings
+  - main [ref=e29]:
+    - generic [ref=e30]: Workspace / DemoFixture session · no production auth
+    - generic [ref=e33]:
+      - generic [ref=e655]:
+        - generic [ref=e656]: Knowledge
+        - generic [ref=e657]: error
+      - generic [ref=e659]:
+        - generic [ref=e660]: error
+        - heading "Block error" [level=1] [ref=e661]
+        - paragraph [ref=e662]: Knowledge identity unavailable (401)

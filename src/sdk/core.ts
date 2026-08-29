@@ -34,6 +34,14 @@ export type SemanticHealth =
 
 export type BlockHealth = SemanticHealth & { authenticated?: boolean; workspaceMatches?: boolean };
 
+export async function cleanupMountedBlock(target: HTMLElement, unmount?: void | (() => void | Promise<void>)) {
+  try {
+    await unmount?.();
+  } finally {
+    target.replaceChildren();
+  }
+}
+
 export type InternalBlock<TSession = unknown> = {
   id: string;
   requiredCapabilities?: readonly string[];
@@ -143,7 +151,7 @@ export async function runLifecycle<TSession>(
   }
   return async () => {
     try {
-      await unmount?.();
+      await cleanupMountedBlock(target, unmount);
     } finally {
       await revoke();
     }
