@@ -1,0 +1,204 @@
+/*
+ * Actionist host token presets.
+ *
+ * The dark preset keeps the proven grouped-rail material. The light preset and
+ * system selector make the contract ready for recipe/theme selection without
+ * requiring blocks to know which preset is active.
+ */
+:root {
+  color-scheme: dark;
+
+  --actionist-surface-canvas: #0d0e0d;
+  --actionist-surface-chrome: #0d0e0d;
+  --actionist-surface-panel: #171715;
+  --actionist-surface-raised: #20201e;
+  --actionist-surface-hover: rgb(255 255 255 / 0.05);
+  --actionist-surface-rail: #121211;
+  --actionist-surface-rail-border: rgb(255 229 194 / 0.35);
+  --actionist-surface-rail-bloom: rgb(255 229 194 / 0.1);
+  --actionist-surface-rail-active: rgb(242 171 73 / 0.1);
+  --actionist-surface-rail-control: rgb(255 255 255 / 0.05);
+  --actionist-surface-rail-search: rgb(255 229 194 / 0.05);
+  --actionist-surface-rail-capsule: rgb(255 255 255 / 0.025);
+  --actionist-surface-rail-brand: rgb(255 255 255 / 0.08);
+  --actionist-surface-rail-hover: rgb(255 255 255 / 0.06);
+  --actionist-surface-profile: rgb(255 255 255 / 0.04);
+  --actionist-surface-profile-border: rgb(255 229 194 / 0.2);
+  --actionist-surface-profile-orb: rgb(255 255 255 / 0.1);
+  --actionist-surface-overlay: rgb(0 0 0 / 0.62);
+
+  --actionist-text-primary: #ecece8;
+  --actionist-text-strong: #f5f4ef;
+  --actionist-text-muted: #9e9e98;
+  --actionist-text-faint: rgb(255 255 255 / 0.48);
+  --actionist-text-inverse: #18130d;
+
+  --actionist-border-subtle: rgb(255 255 255 / 0.06);
+  --actionist-border-default: rgb(255 255 255 / 0.1);
+  --actionist-border-strong: rgb(255 255 255 / 0.16);
+  --actionist-border-focus: rgb(255 229 194 / 0.9);
+
+  --actionist-action-primary: #f2ab49;
+  --actionist-action-primary-hover: #ffbf68;
+  --actionist-action-primary-pressed: #e99a2e;
+  --actionist-action-on-primary: #1a1209;
+
+  --actionist-status-positive: #35d49b;
+  --actionist-status-warning: #fbbf24;
+  --actionist-status-danger: #ff8093;
+  --actionist-status-info: #70a7ff;
+
+  --actionist-type-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --actionist-type-font-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  --actionist-type-size-2xs: 9px;
+  --actionist-type-size-xs: 10px;
+  --actionist-type-size-sm: 12px;
+  --actionist-type-size-md: 13.5px;
+  --actionist-type-size-lg: 19px;
+  --actionist-type-size-xl: 30px;
+  --actionist-type-size-display: clamp(48px, 6vw, 86px);
+  --actionist-type-weight-regular: 500;
+  --actionist-type-weight-medium: 560;
+  --actionist-type-weight-semibold: 650;
+  --actionist-type-weight-bold: 700;
+  --actionist-type-tracking-label: 0.17em;
+  --actionist-type-tracking-kicker: 0.18em;
+  --actionist-type-leading-relaxed: 1.6;
+
+  --actionist-space-0: 0;
+  --actionist-space-half: 2px;
+  --actionist-space-1: 4px;
+  --actionist-space-1-5: 6px;
+  --actionist-space-2: 8px;
+  --actionist-space-2-5: 10px;
+  --actionist-space-3: 12px;
+  --actionist-space-4: 16px;
+  --actionist-space-5: 20px;
+  --actionist-space-6: 24px;
+  --actionist-space-7: 28px;
+  --actionist-space-8: 32px;
+  --actionist-space-10: 40px;
+  --actionist-space-12: 48px;
+  --actionist-space-16: 64px;
+  --actionist-space-17-5: 70px;
+
+  --actionist-radius-xs: 7px;
+  --actionist-radius-sm: 9px;
+  --actionist-radius-control: 11px;
+  --actionist-radius-control-lg: 13px;
+  --actionist-radius-card: 18px;
+  --actionist-radius-panel: 20px;
+  --actionist-radius-rail: 27px;
+  --actionist-radius-rail-inner: 26px;
+  --actionist-radius-pill: 999px;
+  --actionist-radius-round: 50%;
+
+  --actionist-motion-fast: 160ms;
+  --actionist-motion-normal: 200ms;
+  --actionist-motion-slow: 280ms;
+  --actionist-motion-easing: ease;
+
+  --actionist-geometry-rail-width: 232px;
+  --actionist-geometry-rail-collapsed-width: 52px;
+  --actionist-geometry-rail-inset: 16px;
+  --actionist-geometry-control-touch: 44px;
+  --actionist-geometry-nav-row-height: 44px;
+  --actionist-geometry-topbar-height: 76px;
+  --actionist-geometry-profile-height: 64px;
+  --actionist-geometry-icon-xs: 14px;
+  --actionist-geometry-icon-sm: 15px;
+  --actionist-geometry-icon-md: 17px;
+  --actionist-geometry-icon-lg: 19px;
+
+  --actionist-shadow-none: none;
+  --actionist-shadow-focus: 0 0 0 2px rgb(255 229 194 / 0.9);
+  --actionist-shadow-modal: 0 30px 100px rgb(0 0 0 / 0.7);
+  --actionist-shadow-rail: inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 -1px 0 rgb(242 171 73 / 0.075), inset 0 -34px 62px rgb(0 0 0 / 0.28), -13px -8px 46px rgb(255 229 194 / 0.055), 13px 6px 46px rgb(242 171 73 / 0.065), 0 30px 84px rgb(0 0 0 / 0.58), 0 9px 27px rgb(0 0 0 / 0.36);
+  --actionist-shadow-rail-inner: inset 15px 0 28px -25px rgb(255 229 194 / 0.7), inset -13px 0 26px -22px rgb(242 171 73 / 0.42), inset 0 -13px 28px -25px rgb(242 171 73 / 0.35);
+  --actionist-shadow-control: inset 0 1px 0 rgb(255 255 255 / 0.055), inset 0 -8px 16px rgb(0 0 0 / 0.12);
+  --actionist-shadow-search: inset 0 1px 0 rgb(255 255 255 / 0.075), inset 13px 0 24px -24px rgb(255 229 194 / 0.45), inset 0 -11px 22px rgb(0 0 0 / 0.1), 0 11px 25px rgb(0 0 0 / 0.1);
+  --actionist-shadow-capsule: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 9px 0 20px -21px rgb(255 229 194 / 0.38), inset 0 -14px 25px rgb(0 0 0 / 0.14), 0 10px 22px rgb(0 0 0 / 0.11);
+  --actionist-shadow-active: inset 0 0 0 1px rgb(242 171 73 / 0.2), inset 0 1px 0 rgb(255 229 194 / 0.075), inset 0 -10px 20px rgb(0 0 0 / 0.075), 9px 0 20px -14px rgb(242 171 73 / 0.34);
+  --actionist-shadow-active-icon: inset 0 1px 0 rgb(255 229 194 / 0.14), inset 0 -10px 18px rgb(0 0 0 / 0.12), 0 0 18px rgb(242 171 73 / 0.12), 0 6px 15px rgb(0 0 0 / 0.18);
+  --actionist-shadow-brand: inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -9px 16px rgb(0 0 0 / 0.26), 0 8px 21px rgb(242 171 73 / 0.1);
+  --actionist-shadow-profile: inset 0 1px 0 rgb(255 255 255 / 0.095), inset 0 -16px 30px rgb(0 0 0 / 0.16), 0 13px 30px rgb(0 0 0 / 0.17);
+  --actionist-shadow-profile-orb: 0 7px 18px rgb(0 0 0 / 0.28), 0 0 16px rgb(242 171 73 / 0.09), inset 0 1px 0 rgb(255 255 255 / 0.22);
+  --actionist-shadow-status: 0 0 10px rgb(53 212 155 / 0.42);
+  --actionist-shadow-kicker: 0 0 12px rgb(242 171 73 / 0.65);
+
+  --actionist-gradient-canvas: radial-gradient(circle at 64% 0%, rgb(242 171 73 / 0.045), transparent 29%);
+  --actionist-gradient-topbar-line: linear-gradient(90deg, rgb(242 171 73 / 0.34), transparent 34%);
+  --actionist-gradient-rail-shell: radial-gradient(ellipse 118% 48% at -8% -7%, rgb(255 229 194 / 0.17), transparent 54%), radial-gradient(ellipse 46% 74% at 112% 58%, rgb(242 171 73 / 0.095), transparent 66%), linear-gradient(180deg, rgb(31 29 26 / 0.935) 0%, rgb(18 18 17 / 0.972) 43%, rgb(10 10 10 / 0.992) 100%);
+  --actionist-gradient-rail-border: conic-gradient(from 0deg, rgb(255 229 194 / 0.46) 0deg, rgb(255 191 104 / 0.32) 82deg, rgb(242 171 73 / 0.27) 176deg, rgb(242 171 73 / 0.22) 246deg, rgb(255 255 255 / 0.37) 316deg, rgb(255 229 194 / 0.46) 360deg);
+  --actionist-gradient-rail-bloom: radial-gradient(ellipse 86% 36% at -7% -2%, rgb(255 229 194 / 0.12), transparent 62%), radial-gradient(ellipse 31% 62% at 110% 57%, rgb(242 171 73 / 0.075), transparent 70%);
+  --actionist-gradient-rail-edge: linear-gradient(90deg, transparent, rgb(255 229 194 / 0.24) 18%, rgb(255 255 255 / 0.38) 47%, rgb(255 229 194 / 0.16) 80%, transparent);
+  --actionist-gradient-rail-active: radial-gradient(ellipse 64% 135% at 6% 48%, rgb(242 171 73 / 0.13), transparent 72%), linear-gradient(90deg, rgb(242 171 73 / 0.105), rgb(242 171 73 / 0.04));
+  --actionist-gradient-rail-control: linear-gradient(145deg, rgb(255 255 255 / 0.05), rgb(0 0 0 / 0.16));
+  --actionist-gradient-rail-search: linear-gradient(112deg, rgb(255 229 194 / 0.06), rgb(255 255 255 / 0.027) 48%, rgb(0 0 0 / 0.055));
+  --actionist-gradient-rail-capsule: linear-gradient(155deg, rgb(255 229 194 / 0.045), rgb(255 255 255 / 0.018) 46%, rgb(0 0 0 / 0.08));
+  --actionist-gradient-rail-brand: linear-gradient(145deg, rgb(255 255 255 / 0.085), rgb(0 0 0 / 0.74));
+  --actionist-gradient-rail-hover: linear-gradient(180deg, rgb(255 255 255 / 0.062), rgb(255 255 255 / 0.025));
+  --actionist-gradient-profile: linear-gradient(112deg, rgb(255 229 194 / 0.07), rgb(255 255 255 / 0.03) 43%, rgb(0 0 0 / 0.13) 100%);
+  --actionist-gradient-profile-border: linear-gradient(135deg, rgb(255 229 194 / 0.25), rgb(255 255 255 / 0.095) 53%, rgb(242 171 73 / 0.18) 100%);
+  --actionist-gradient-profile-overlay: radial-gradient(ellipse 76% 155% at -4% 116%, rgb(255 191 104 / 0.16), transparent 67%), radial-gradient(ellipse 56% 135% at 104% 50%, rgb(242 171 73 / 0.08), transparent 70%), linear-gradient(104deg, rgb(255 229 194 / 0.025), transparent 54%);
+  --actionist-gradient-profile-rings: radial-gradient(circle, transparent 0 42%, rgb(242 171 73 / 0.17) 42.4% 42.9%, transparent 43.3% 58%, rgb(255 229 194 / 0.115) 58.4% 58.9%, transparent 59.3%);
+  --actionist-gradient-profile-orb: linear-gradient(145deg, rgb(255 229 194 / 0.18), rgb(0 0 0 / 0.7));
+  --actionist-gradient-active-icon: radial-gradient(circle at 42% 42%, rgb(242 171 73 / 0.2), rgb(242 171 73 / 0.105) 48%, rgb(242 171 73 / 0.045) 100%);
+  --actionist-texture-rail-noise: radial-gradient(rgb(255 255 255 / 0.38) 0.42px, transparent 0.42px);
+  --actionist-blur-glass: 32px;
+  --actionist-blur-topbar: 22px;
+  --actionist-blur-modal: 7px;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --actionist-surface-canvas: #f4f5f7;
+  --actionist-surface-chrome: rgb(255 255 255 / 0.88);
+  --actionist-surface-panel: #ffffff;
+  --actionist-surface-raised: #fbfbfc;
+  --actionist-surface-hover: rgb(16 24 40 / 0.05);
+  --actionist-text-primary: #27303d;
+  --actionist-text-strong: #111827;
+  --actionist-text-muted: #697586;
+  --actionist-text-faint: rgb(39 48 61 / 0.58);
+  --actionist-text-inverse: #ffffff;
+  --actionist-border-subtle: rgb(16 24 40 / 0.06);
+  --actionist-border-default: rgb(16 24 40 / 0.12);
+  --actionist-border-strong: rgb(16 24 40 / 0.2);
+  --actionist-action-primary: #c87918;
+  --actionist-action-primary-hover: #a96010;
+  --actionist-action-primary-pressed: #8f500d;
+  --actionist-action-on-primary: #ffffff;
+  --actionist-gradient-canvas: radial-gradient(circle at 64% 0%, rgb(200 121 24 / 0.08), transparent 29%);
+  --actionist-gradient-topbar-line: linear-gradient(90deg, rgb(200 121 24 / 0.3), transparent 34%);
+  --actionist-shadow-modal: 0 30px 80px rgb(16 24 40 / 0.18);
+}
+
+[data-theme="system"] {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] {
+    color-scheme: light;
+    --actionist-surface-canvas: #f4f5f7;
+    --actionist-surface-chrome: rgb(255 255 255 / 0.88);
+    --actionist-surface-panel: #ffffff;
+    --actionist-surface-raised: #fbfbfc;
+    --actionist-surface-hover: rgb(16 24 40 / 0.05);
+    --actionist-text-primary: #27303d;
+    --actionist-text-strong: #111827;
+    --actionist-text-muted: #697586;
+    --actionist-text-faint: rgb(39 48 61 / 0.58);
+    --actionist-border-subtle: rgb(16 24 40 / 0.06);
+    --actionist-border-default: rgb(16 24 40 / 0.12);
+    --actionist-border-strong: rgb(16 24 40 / 0.2);
+    --actionist-action-primary: #c87918;
+    --actionist-action-primary-hover: #a96010;
+    --actionist-action-primary-pressed: #8f500d;
+    --actionist-action-on-primary: #ffffff;
+    --actionist-gradient-canvas: radial-gradient(circle at 64% 0%, rgb(200 121 24 / 0.08), transparent 29%);
+    --actionist-gradient-topbar-line: linear-gradient(90deg, rgb(200 121 24 / 0.3), transparent 34%);
+    --actionist-shadow-modal: 0 30px 80px rgb(16 24 40 / 0.18);
+  }
+}

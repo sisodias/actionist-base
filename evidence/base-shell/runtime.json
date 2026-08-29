@@ -1,0 +1,62 @@
+{
+  "app": "Actionist Base",
+  "server": "http://127.0.0.1:4180",
+  "route": "/w/knowledge-local-workspace/fixture",
+  "consoleErrors": 0,
+  "desktopExpanded": {
+    "viewport": [1280, 720],
+    "railState": "expanded",
+    "railWidth": 232,
+    "workspaceMarginLeft": "264px",
+    "recipeGroups": 2,
+    "activeRoute": { "label": "Fixture block", "ariaCurrent": "page" },
+    "contentMount": "Native fixture blockMounted through the host lifecycle.",
+    "overflow": { "bodyScrollWidth": 1280, "documentScrollWidth": 1280, "viewportWidth": 1280 },
+    "tokenContract": "actionist-host-v1",
+    "theme": "dark"
+  },
+  "desktopCompact": {
+    "railState": "compact",
+    "compactDestinations": 4,
+    "activeCompactDestination": "page",
+    "contentMountPreserved": true,
+    "persistedKey": "actionist.shell.rail-collapsed",
+    "persistedValue": "true",
+    "overflow": { "bodyScrollWidth": 1280, "documentScrollWidth": 1280, "viewportWidth": 1280 }
+  },
+  "mobileClosed": {
+    "viewport": [390, 844],
+    "drawerOpen": false,
+    "railState": "expanded",
+    "railInert": true,
+    "contentMountPreserved": true,
+    "overflow": { "bodyScrollWidth": 390, "documentScrollWidth": 390, "viewportWidth": 390 }
+  },
+  "mobileOpen": {
+    "drawerOpen": true,
+    "backdrop": true,
+    "railInert": false,
+    "railTransform": "matrix(1, 0, 0, 1, 0, 0)",
+    "focus": "Collapse rail",
+    "contentMountPreserved": true,
+    "overflow": { "bodyScrollWidth": 390, "documentScrollWidth": 390, "viewportWidth": 390 }
+  },
+  "mobileEscape": {
+    "drawerOpen": false,
+    "backdrop": false,
+    "railInert": true,
+    "focus": "Open navigation",
+    "overflow": { "bodyScrollWidth": 390, "documentScrollWidth": 390, "viewportWidth": 390 }
+  },
+  "mobileTabAfterEscape": {
+    "focus": "Open global search",
+    "tag": "BUTTON",
+    "enteredInertRail": false
+  },
+  "screenshots": [
+    "desktop-expanded.png",
+    "desktop-compact.png",
+    "mobile-closed.png",
+    "mobile-open.png"
+  ]
+}

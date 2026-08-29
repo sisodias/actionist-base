@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { ProductTheme } from './tokens';
 
 export type PrincipalKind = 'employee' | 'client' | 'service' | 'system';
 export type HostContext = { tenantId: string; workspaceId: string; principalId: string; principalKind: PrincipalKind; teamIds: string[]; clientAccountIds: string[]; correlationId: string };
@@ -13,7 +14,14 @@ export type Unmount = () => void | Promise<void>;
 export type BlockMount = { id: string; version: string; route: string; capability: string; label: string; preload?: () => Promise<void>; mount(target: HTMLElement, ctx: HostContext, bindings: RuntimeBindings): Promise<Unmount>; health?: (ctx: HostContext, bindings: RuntimeBindings) => Promise<Health> };
 export type NavItem = { id: string; label: string; route: string; icon?: string; blockId?: string; capability?: string };
 export type NavGroup = { id: string; label: string; items: NavItem[]; collapsible?: boolean };
-export type ProductRecipe = { name: string; subtitle: string; navigation: NavGroup[]; tokens: Record<string, string> };
+export type ProductRecipe = {
+  id?: string;
+  name: string;
+  subtitle: string;
+  navigation: NavGroup[];
+  settings?: NavItem;
+  theme?: ProductTheme;
+};
 
 export class BlockRegistry {
   private blocks = new Map<string, BlockMount>();
@@ -29,20 +37,36 @@ export function workspaceMatches(pathWorkspaceId: string, context: HostContext) 
 export function fixtureIdentity(audience: string, context: HostContext) { return Promise.resolve(`fixture.${audience}.${context.tenantId}.${context.workspaceId}.${context.principalId}`); }
 export const fixtureBindings: RuntimeBindings = { apiBaseUrl: '', identity: { issue: fixtureIdentity }, data: {}, tokens: { resolve: keys => Object.fromEntries(keys.map(k => [k, ''])) }, ports: { emit: async () => undefined, command: async () => ({ ok: false, error: 'fixture command unavailable' }) } };
 
-export type ShellProps = { recipe: ProductRecipe; active?: string; children: ReactNode; onNavigate: (route: string) => void };
+export type ShellWorkspace = { id?: string; name: string; detail?: string };
+export type ShellProps = {
+  recipe: ProductRecipe;
+  active?: string;
+  children: ReactNode;
+  onNavigate: (route: string) => void;
+  workspace?: ShellWorkspace;
+};
+export type ShellComponent = (props: ShellProps) => ReactNode;
 
 export async function cleanupBlockMount(target: HTMLElement, unmount?: Unmount | null) {
-  try {
-    await unmount?.();
-  } finally {
-    target.replaceChildren();
-  }
+  try { await unmount?.(); } finally { target.replaceChildren(); }
 }
 
-export async function runBlockLifecycle(block: BlockMount, target: HTMLElement, context: HostContext, bindings: RuntimeBindings, onHealth: (health: Health) => void): Promise<Unmount> {
+export async function runBlockLifecycle(block: BlockMount, target: HTMLElement, context: HostContext, bindings: RuntimeBindings, onHealth: (health: Health) => void, isActive?: () => boolean): Promise<Unmount> {
+  const active = () => !isActive || isActive();
+  if (!active()) return () => undefined;
   onHealth({ status: 'loading' });
   await block.preload?.();
+  if (!active()) return () => undefined;
   const health = await block.health?.(context, bindings);
   if (health) { onHealth(health); if (health.status === 'unavailable' || health.status === 'error') return () => undefined; }
+  if (!active()) return () => undefined;
+  return block.mount(target, context, bindings);
+}
+  onHealth({ status: 'loading' });
+  await block.preload?.();
+  if (!active()) return () => undefined;
+  const health = await block.health?.(context, bindings);
+  if (health) { onHealth(health); if (health.status === 'unavailable' || health.status === 'error') return () => undefined; }
+  if (!active()) return () => undefined;
   return block.mount(target, context, bindings);
 }
