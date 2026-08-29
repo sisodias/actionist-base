@@ -22,7 +22,7 @@ npm run build
 npm run dev
 ```
 
-Open `/w/demo`. The Fixture block mounts locally. AFFiNE remains an adapter: set `VITE_AFFINE_MODULE_URL` to a compiled module URL and provide its backend binding before it becomes available.
+Open `/w/knowledge-local-workspace`. The Fixture block mounts locally. The Knowledge route binds the existing compiled AFFiNE package when its local module, backend, and signed-context issuer are running; see [`docs/LOCAL-AFFINE.md`](docs/LOCAL-AFFINE.md).
 
 ## Deliberate non-goals
 
