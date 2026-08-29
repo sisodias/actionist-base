@@ -9,7 +9,13 @@ export const knowledgeRuntime: KnowledgeRuntimeConfig = {
   backendBase: import.meta.env.VITE_AFFINE_BACKEND_URL ?? defaultBackendBase,
   issuerUrl: import.meta.env.VITE_AFFINE_ISSUER_URL ?? defaultIssuerUrl,
   expectedClientId: import.meta.env.VITE_AFFINE_CLIENT_ID ?? 'bykonz-yard',
+  hostSessionCookie: import.meta.env.DEV ? 'knowledge-local-disposable-session' : undefined,
 };
+
+export function installKnowledgeHostSession(config: KnowledgeRuntimeConfig = knowledgeRuntime) {
+  if (!config.hostSessionCookie) return;
+  document.cookie = `siso_host_session=${encodeURIComponent(config.hostSessionCookie)}; Path=/; SameSite=Lax`;
+}
 
 export async function fetchKnowledgeIdentity(config: KnowledgeRuntimeConfig = knowledgeRuntime): Promise<KnowledgeIdentity> {
   const response = await fetch(`${config.issuerUrl.replace(/\/$/, '')}/api/siso/knowledge-context`, {

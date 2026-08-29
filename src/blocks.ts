@@ -1,5 +1,5 @@
 import type { BlockMount, Health, KnowledgeRuntimeConfig } from './host';
-import { createKnowledgeBindings, fetchKnowledgeIdentity, knowledgeRuntime } from './knowledge';
+import { createKnowledgeBindings, fetchKnowledgeIdentity, installKnowledgeHostSession, knowledgeRuntime } from './knowledge';
 
 export const fixtureBlock: BlockMount = {
   id: 'actionist/fixture', version: '0.1.0', route: '/fixture', capability: 'fixture.view', label: 'Fixture',
@@ -15,11 +15,13 @@ export function affineBlock(config: KnowledgeRuntimeConfig = knowledgeRuntime): 
   return {
     id: 'actionist/affine-workspace', version: '0.2.0', route: '/knowledge', capability: 'knowledge.view', label: 'Knowledge',
     async preload() {
+      installKnowledgeHostSession(config);
       identity = await fetchKnowledgeIdentity(config);
       const mod = await import(/* @vite-ignore */ config.moduleUrl) as { preload?: (options?: unknown) => Promise<void> };
       await mod.preload?.();
     },
     async mount(target, ctx) {
+      installKnowledgeHostSession(config);
       identity ??= await fetchKnowledgeIdentity(config);
       if (identity.workspaceId !== ctx.workspaceId) throw new Error('Knowledge workspace mismatch');
       const bindings = createKnowledgeBindings(identity, config);
@@ -49,6 +51,7 @@ export function affineBlock(config: KnowledgeRuntimeConfig = knowledgeRuntime): 
     },
     health: async () => {
       try {
+        installKnowledgeHostSession(config);
         identity = await fetchKnowledgeIdentity(config);
         const response = await fetch(`${config.backendBase.replace(/\/$/, '')}/api/auth/session`, { credentials: 'include' });
         return response.ok ? { status: 'healthy' } : { status: 'unavailable', detail: `Knowledge backend unavailable (${response.status})` };

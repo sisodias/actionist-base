@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createKnowledgeBindings, fetchKnowledgeIdentity } from './knowledge';
+import { createKnowledgeBindings, fetchKnowledgeIdentity, installKnowledgeHostSession } from './knowledge';
 
 const config = { moduleUrl: '/module.js', backendBase: '/backend', issuerUrl: '/issuer', expectedClientId: 'bykonz-yard' };
 const identity = { userId: 'u', email: 'u@example.test', clientId: 'bykonz-yard', workspaceId: 'w', expiresAt: new Date(Date.now() + 60_000).toISOString(), capabilities: ['view', 'edit'] as const, token: 'signed-context' };
@@ -18,6 +18,11 @@ describe('knowledge runtime bridge', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ ...identity, expiresAt: new Date(0).toISOString() }), { status: 200 })));
     await expect(fetchKnowledgeIdentity(config)).rejects.toThrow('expired');
     vi.unstubAllGlobals();
+  });
+
+  it('installs the disposable host session only when configured', () => {
+    installKnowledgeHostSession({ ...config, hostSessionCookie: 'fixture-session' });
+    expect(document.cookie).toContain('siso_host_session=fixture-session');
   });
 
   it('binds the signed context and knowledge-owned namespaces', async () => {
