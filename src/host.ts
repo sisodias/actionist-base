@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 export type PrincipalKind = 'employee' | 'client' | 'service' | 'system';
 export type HostContext = { tenantId: string; workspaceId: string; principalId: string; principalKind: PrincipalKind; teamIds: string[]; clientAccountIds: string[]; correlationId: string };
 export type RuntimeBindings = { apiBaseUrl: string; identity: { issue(audience: string, context: HostContext): Promise<string> }; data: { postgresSchema?: string; redisNamespace?: string; objectNamespace?: string }; tokens: { resolve(keys: string[]): Record<string, string> }; ports: { emit(event: EventEnvelope): Promise<void>; command(c: Command): Promise<Result> } };
+export type KnowledgeIdentity = { userId: string; email: string; displayName?: string; clientId: string; workspaceId: string; expiresAt: string; capabilities: Array<'view' | 'edit' | 'share' | 'admin'>; token: string };
+export type KnowledgeRuntimeConfig = { moduleUrl: string; backendBase: string; issuerUrl: string; expectedClientId: string };
 export type EventEnvelope = { type: string; version: number; actor: HostContext; payload: unknown; correlationId: string; idempotencyKey: string };
 export type Command = { type: string; payload: unknown };
 export type Result = { ok: boolean; value?: unknown; error?: string };
