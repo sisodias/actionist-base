@@ -53,6 +53,14 @@ current_status, revoked_at, external_revocation_complete,
 correlation_id
 ```
 
+Failure envelope:
+
+```text
+schema_version, ok, stage, reason_code, session_status,
+correlation_id, retryable, assertion_present, mount_started,
+donor_request_started, missing_capabilities
+```
+
 Unknown schema versions or malformed required fields fail closed. The donor capability set must equal the Base-issued set after normalization; a subset or superset is denied.
 
 ## Semantic acceptance
@@ -80,6 +88,12 @@ The adapter acquires one access for health and reuses it for mount. Preload does
 
 Base route resolution accepts a full `/w/:workspaceId/...` path plus the selected context and current session readback. It emits a block only when the path workspace equals the selected workspace, the session is active and unexpired, its principal/tenant/workspace exactly match the context, and it grants every installed capability. Navigation visibility uses the same session guard.
 
+## Negative fixture boundary
+
+`src/session/affine-e2e-negative-fixture.ts` is an explicitly named, credentialless E2E-only source boundary. It is not imported by the production session authority or adapter and cannot issue an assertion. Activation requires the exact fixture identifier `actionist.base.affine-e2e-negative.v1`.
+
+The fixture derives only redacted donor readback shapes for wrong authentication, issuer, audience, client, principal, tenant, workspace, capabilities, deterministic expiry, and session/access replay. It also produces host-detectable denial envelopes that guarantee `assertion_present`, `mount_started`, and `donor_request_started` are false. Expiry requires an explicit comparison time; the fixture never mutates or depends on host wall-clock state.
+
 ## Remaining source work
 
-The isolated credentialless negative-fixture boundary and exact frozen candidate handoff remain open. No package, typecheck, test, build, service, or browser evidence exists for this checkpoint while compute is held.
+The exact frozen candidate handoff and executable verification remain open. No package, typecheck, test, build, service, or browser evidence exists for this checkpoint while compute is held.

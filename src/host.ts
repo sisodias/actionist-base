@@ -25,6 +25,19 @@ export type HostFailureReasonCode =
   | 'assertion_issue_failed'
   | 'semantic_readback_unavailable'
   | 'access_replay_denied';
+export type HostFailureStage = 'inspect' | 'selection' | 'issue' | 'route' | 'semantic_readback' | 'api' | 'worker' | 'realtime' | 'mount';
+export type HostFailureEnvelope = {
+  ok: false;
+  stage: HostFailureStage;
+  reasonCode: HostFailureReasonCode;
+  sessionStatus: HostSessionReadback['status'];
+  correlationId: string;
+  retryable: boolean;
+  assertionPresent: boolean;
+  mountStarted: boolean;
+  donorRequestStarted: boolean;
+  missingCapabilities: readonly string[];
+};
 export type Health = { status: 'loading' | 'healthy' | 'degraded' | 'unavailable' | 'error'; reasonCode?: HostFailureReasonCode; detail?: string };
 export type Unmount = () => void | Promise<void>;
 export type HostSessionReadback = {
@@ -132,6 +145,19 @@ export type HostRevocationReadbackWire = {
   external_revocation_complete: true;
   correlation_id: string;
 };
+export type HostFailureEnvelopeWire = {
+  schema_version: typeof AFFINE_ACCESS_WIRE_SCHEMA;
+  ok: false;
+  stage: HostFailureStage;
+  reason_code: HostFailureReasonCode;
+  session_status: HostSessionReadback['status'];
+  correlation_id: string;
+  retryable: boolean;
+  assertion_present: boolean;
+  mount_started: boolean;
+  donor_request_started: boolean;
+  missing_capabilities: readonly string[];
+};
 export type DonorSemanticReadbackWire = Omit<HostAccessReadbackWire, 'authenticated' | 'principal_kind' | 'assertion_present'> & { authenticated: boolean };
 
 export function serializeHostSessionReadback(readback: HostSessionReadback): HostSessionReadbackWire {
@@ -202,6 +228,22 @@ export function serializeHostRevocationReadback(readback: HostRevocationReadback
     revoked_at: readback.revokedAt,
     external_revocation_complete: true,
     correlation_id: readback.correlationId,
+  };
+}
+
+export function serializeHostFailureEnvelope(failure: HostFailureEnvelope): HostFailureEnvelopeWire {
+  return {
+    schema_version: AFFINE_ACCESS_WIRE_SCHEMA,
+    ok: false,
+    stage: failure.stage,
+    reason_code: failure.reasonCode,
+    session_status: failure.sessionStatus,
+    correlation_id: failure.correlationId,
+    retryable: failure.retryable,
+    assertion_present: failure.assertionPresent,
+    mount_started: failure.mountStarted,
+    donor_request_started: failure.donorRequestStarted,
+    missing_capabilities: [...failure.missingCapabilities],
   };
 }
 
