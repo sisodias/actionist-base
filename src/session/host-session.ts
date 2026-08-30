@@ -1,9 +1,11 @@
 import type { AuthenticatedHostPrincipal } from '../auth/host-auth';
 import type {
   HostAccessGrant,
+  HostAccessPort,
   HostAccessReadback,
   HostAccessRequest,
   HostAssertionClaims,
+  HostContext,
   HostSessionReadback,
 } from '../host';
 import type { TenantWorkspaceSelection } from '../tenancy/workspace-selection';
@@ -15,6 +17,7 @@ export type HostSessionErrorCode =
   | 'SESSION_EXPIRED'
   | 'SESSION_REVOKED'
   | 'SESSION_LOGGED_OUT'
+  | 'SCOPE_DENIED'
   | 'AUDIENCE_DENIED'
   | 'CLIENT_DENIED'
   | 'CAPABILITY_DENIED'
@@ -69,11 +72,14 @@ export class BaseSessionAuthority {
     this.now = options.now ?? Date.now;
     this.createSessionId = options.createSessionId ?? (() => globalThis.crypto.randomUUID());
     this.sessionTtlMs = options.sessionTtlMs ?? DEFAULT_SESSION_TTL_MS;
-    if (this.sessionTtlMs <= 0) throw new Error('host session ttl must be positive');
+    if (!Number.isFinite(this.sessionTtlMs) || this.sessionTtlMs <= 0) throw new Error('host session ttl must be positive');
     for (const policy of options.policies) {
       const audience = policy.audience.trim();
       const clientId = policy.clientId.trim();
       if (!audience || !clientId) throw new Error('audience policy requires audience and client id');
+      if (policy.accessTtlMs !== undefined && (!Number.isFinite(policy.accessTtlMs) || policy.accessTtlMs <= 0)) {
+        throw new Error('audience policy access ttl must be positive');
+      }
       if (this.policies.has(audience)) throw new Error(`duplicate audience policy: ${audience}`);
       this.policies.set(audience, {
         ...policy,
@@ -89,10 +95,10 @@ export class BaseSessionAuthority {
     selection: TenantWorkspaceSelection,
     ttlMs = this.sessionTtlMs,
   ): HostSessionReadback {
-    if (ttlMs <= 0) throw new Error('host session ttl must be positive');
+    if (!Number.isFinite(ttlMs) || ttlMs <= 0) throw new Error('host session ttl must be positive');
     const issuedAtMs = this.now();
-    const sessionId = this.createSessionId();
-    if (!sessionId.trim() || this.sessions.has(sessionId)) throw new Error('host session id must be unique and non-empty');
+    const sessionId = this.createSessionId().trim();
+    if (!sessionId || this.sessions.has(sessionId)) throw new Error('host session id must be unique and non-empty');
     const record: SessionRecord = {
       sessionId,
       status: 'active',
@@ -112,6 +118,23 @@ export class BaseSessionAuthority {
     if (!record) return missingReadback(this.options.issuer, sessionId);
     this.expireIfNeeded(record);
     return this.readback(record);
+  }
+
+  accessPort(sessionId: string | null | undefined): HostAccessPort {
+    return {
+      issue: async (context, request) => {
+        const record = this.requireActive(sessionId);
+        if (
+          record.principal.principalId !== context.principalId
+          || record.principal.principalKind !== context.principalKind
+          || record.selection.tenantId !== context.tenantId
+          || record.selection.workspaceId !== context.workspaceId
+        ) {
+          throw new HostSessionError('SCOPE_DENIED', 'Base access context denied');
+        }
+        return this.issueAccess(sessionId, request);
+      },
+    };
   }
 
   async issueAccess(sessionId: string | null | undefined, request: HostAccessRequest): Promise<HostAccessGrant> {
@@ -143,7 +166,12 @@ export class BaseSessionAuthority {
       issuedAt: new Date(issuedAtMs).toISOString(),
       expiresAt,
     };
-    const assertion = await this.options.issueAssertion(claims);
+    let assertion: string;
+    try {
+      assertion = await this.options.issueAssertion(claims);
+    } catch {
+      throw new HostSessionError('ASSERTION_ISSUE_FAILED', 'Base assertion issue failed');
+    }
     if (!assertion.trim()) throw new HostSessionError('ASSERTION_ISSUE_FAILED', 'Base assertion issue failed');
     this.requireActive(sessionId);
     const readback: HostAccessReadback = {

@@ -16,8 +16,9 @@ export const fixtureBlock: BlockMount = {
   health: async (): Promise<Health> => ({ status: 'healthy' }),
 };
 
-export function affineBlock(access: HostAccessPort, config: KnowledgeRuntimeConfig = knowledgeRuntime): BlockMount {
+export function affineBlock(access?: HostAccessPort, config: KnowledgeRuntimeConfig = knowledgeRuntime): BlockMount {
   const issue = async (ctx: HostContext) => {
+    if (!access) throw new Error('Base access port is not configured');
     const grant = await access.issue(ctx, { ...AFFINE_ACCESS_REQUEST, clientId: config.expectedClientId });
     assertGrantMatchesContext(grant, ctx, config);
     return grant;
@@ -25,6 +26,7 @@ export function affineBlock(access: HostAccessPort, config: KnowledgeRuntimeConf
   return {
     id: 'actionist/affine-workspace', version: '0.2.0', route: '/knowledge', capability: 'knowledge.view', label: 'Knowledge',
     async preload(ctx) {
+      if (!access) return;
       await issue(ctx);
       installKnowledgeEmbedConfig(config);
       const mod = await import(/* @vite-ignore */ config.moduleUrl) as { preload?: (options?: unknown) => Promise<void> };
@@ -70,6 +72,7 @@ export function affineBlock(access: HostAccessPort, config: KnowledgeRuntimeConf
       };
     },
     health: async (ctx) => {
+      if (!access) return { status: 'unavailable', detail: 'Base access port is not configured' };
       try {
         const grant = await issue(ctx);
         const identity = knowledgeIdentityFromGrant(grant);

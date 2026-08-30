@@ -43,10 +43,12 @@ export class HostBlockRegistry {
     return [...this.installations.values()].map(cloneInstallation);
   }
 
-  resolve(pathname: string): BlockMount | undefined {
+  resolve(pathname: string, grantedCapabilities: readonly string[] = []): BlockMount | undefined {
+    const grants = new Set(grantedCapabilities);
     return this.list()
+      .filter((installation) => installation.requiredCapabilities.every((capability) => grants.has(capability)))
+      .filter(({ block }) => pathname === block.route || pathname.startsWith(`${block.route}/`))
       .map((installation) => installation.block)
-      .filter((block) => pathname === block.route || pathname.startsWith(`${block.route}/`))
       .sort((left, right) => right.route.length - left.route.length)[0];
   }
 
