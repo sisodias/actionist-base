@@ -1,0 +1,290 @@
+{
+  "schema_version": "actionist.super-saas.existing-machinery-audit.v1",
+  "recorded_at": "2026-08-30T10:22:17Z",
+  "assignment_id": "AM-033",
+  "owner": "BASE-PLATFORM-SOL",
+  "state": "PUBLISHED_PRE_SOURCE_MUTATION_STATIC_ONLY",
+  "truth_boundary": {
+    "statement": "This is a content-read and static-source audit. It is not a runtime, security, legal, production-readiness, qualification or admission claim.",
+    "network_acquisition_performed_by_this_lane": false,
+    "package_or_dependency_action_performed": false,
+    "tests_typecheck_build_database_service_browser_performed": false
+  },
+  "identity_receipt": {
+    "worktree_ref": "BASE_PLATFORM_WORKTREE",
+    "branch": "am/base-platform-super-saas-cde61b-20260830",
+    "head": "cde61b238307e38f2868c7425a0b7c7791004833",
+    "tree": "00d5ec13febe4289c4ed3ac30e3e6791ef87db45",
+    "initial_porcelain_entries": 0,
+    "tracked_and_index_diff": "clean",
+    "push_url": "DISABLED",
+    "controlling_packet_sha256": "0ab7f4564c5f2c303e4fd59a19ad51d2213bf5db50d4f3f0bb62835685482ee0"
+  },
+  "repository_census": {
+    "tracked_files": 68,
+    "tracked_bytes": 1505152,
+    "groups": {
+      "root": {"files": 14, "bytes": 86301},
+      "src": {"files": 17, "bytes": 110715, "typescript_or_tsx_implementation": 10, "tests": 5, "css": 2},
+      "docs": {"files": 4, "bytes": 22053},
+      "evidence": {"files": 33, "bytes": 1286083}
+    },
+    "package": {
+      "name": "@actionist/host",
+      "lockfile_version": 3,
+      "lockfile_package_entries": 119,
+      "direct_dependencies": 10,
+      "server_database_auth_billing_storage_email_jobs_flags_observability_dependencies": 0,
+      "node_modules_at_observation": "ABSENT"
+    },
+    "owned_roots_before_publication": {
+      "src/platform": "ABSENT",
+      "migrations/actionist-host": "ABSENT",
+      "scripts/platform": "ABSENT",
+      "docs/SUPER-SAAS-PLATFORM": "ABSENT"
+    }
+  },
+  "current_base_content_findings": [
+    {
+      "area": "host_and_block_lifecycle",
+      "classification": "PRESENT_FIXTURE_MACHINERY",
+      "content_evidence": [
+        "src/host.ts defines HostContext, deny-by-default capability checks, workspace matching, BlockRegistry and ordered block lifecycle.",
+        "src/sdk/core.ts defines an experimental SessionAdapter, namespace ownership checks, fail-closed session evaluation and ordered cleanup/revoke.",
+        "docs/BLOCK-SDK-CANDIDATE.md explicitly says namespace isolation is descriptive rather than infrastructure enforcement and the candidate is not a production auth broker."
+      ],
+      "reuse_decision": "Extend through a new platform namespace; do not replace or edit the held host/SDK files in this lane."
+    },
+    {
+      "area": "auth_session_tenant_workspace",
+      "classification": "FIXTURE_AND_DONOR_BRIDGE_ONLY",
+      "content_evidence": [
+        "src/host.ts fixtureIdentity returns a literal fixture token and fixtureBindings has no durable identity store.",
+        "src/knowledge.ts fetches and validates the existing AFFiNE signed-context bridge, including client, expiry, identity and workspace checks.",
+        "README.md declares production authentication and long-lived services deliberate non-goals at the baseline commit."
+      ],
+      "gap": "No durable Base user, tenant, workspace, membership, provider identity or session record exists in this repository."
+    },
+    {
+      "area": "postgres_orm_migrations_rls",
+      "classification": "DESCRIPTORS_ONLY",
+      "content_evidence": [
+        "RuntimeBindings and RuntimeNamespace can name Postgres schemas, Redis namespaces and object namespaces.",
+        "There is no database client or ORM dependency, no migrations directory and no RLS policy in the baseline tree."
+      ],
+      "gap": "Actionist-host durable records, migration authority, database roles, tenant transaction context and RLS remain unimplemented."
+    },
+    {
+      "area": "billing_webhooks_entitlements",
+      "classification": "ABSENT_FROM_BASE",
+      "content_evidence": [
+        "No package dependency, source module or migration implements Stripe, provider events, subscriptions or entitlements.",
+        "The inspected local finance research identifies an earlier SISOCRM Stripe/RevenueCat payment-event and quota update implementation, but its cited source checkout is not present at the recorded path in this environment."
+      ],
+      "gap": "Provider facts must not become authority directly; Base needs idempotent provider-event storage and Base-owned entitlement grants."
+    },
+    {
+      "area": "object_storage",
+      "classification": "NAMESPACE_DESCRIPTOR_ONLY",
+      "content_evidence": [
+        "The current Base can pass objectNamespace metadata to a block but owns no upload, object-key, signing, retention or deletion contract."
+      ],
+      "gap": "S3-compatible access remains an adapter and deployment concern."
+    },
+    {
+      "area": "email",
+      "classification": "ABSENT_FROM_BASE",
+      "content_evidence": ["No mail transport, template, outbox, delivery-event or local catcher dependency appears in package or source."],
+      "gap": "Only a future SMTP/provider port is justified; deliverability is unproven."
+    },
+    {
+      "area": "background_jobs",
+      "classification": "ABSENT_FROM_BASE",
+      "content_evidence": ["No queue, worker, scheduler or job persistence dependency appears in package or source."],
+      "gap": "The bounded slice may define no worker runtime; durable jobs remain behind a future port."
+    },
+    {
+      "area": "feature_flags",
+      "classification": "ABSENT_FROM_BASE",
+      "content_evidence": ["No flag evaluator, provider SDK or flag storage exists in the baseline tree."],
+      "gap": "Initial flags should remain Base-owned data with a replaceable evaluation seam rather than a new service dependency."
+    },
+    {
+      "area": "secrets_and_config",
+      "classification": "AFFINE_VITE_ENV_ONLY",
+      "content_evidence": ["src/knowledge.ts reads four Vite environment variables for the local AFFiNE bridge; no central typed config or secret-reference registry exists."],
+      "gap": "Secret values must remain external references; this slice must not introduce credentials or a secret service."
+    },
+    {
+      "area": "audit",
+      "classification": "ABSENT_FROM_BASE",
+      "content_evidence": ["Host event envelopes carry actor and correlation fields, but no append-only durable audit store exists."],
+      "gap": "The first migration needs a Base-owned append-only tenant-scoped audit record without claiming an operational retention regime."
+    },
+    {
+      "area": "observability_health",
+      "classification": "SEMANTIC_HEALTH_CONTRACT_ONLY",
+      "content_evidence": ["Host and SDK health types fail closed and the AFFiNE adapter performs semantic user/workspace read-back; no telemetry SDK or collector is configured."],
+      "gap": "OpenTelemetry-compatible attributes and provider selection remain contractual, not instrumented."
+    },
+    {
+      "area": "deploy_backup_restore",
+      "classification": "ABSENT_FROM_BASE",
+      "content_evidence": ["README.md declares deployment and long-lived services out of scope; no container, deploy, backup, WAL or restore source exists in the baseline tree."],
+      "gap": "This packet authorizes contracts only; no deploy target, backup set or restore point may be claimed."
+    }
+  ],
+  "prior_selected_machinery": [
+    {
+      "source": "P09 data-plane survey and decision ledger",
+      "classification": "RESEARCH_ONLY_NOT_ADMITTED",
+      "content_fact": "The survey selected PostgreSQL for Actionist-owned state, Drizzle as the typed query/schema candidate, pg-boss for Postgres-backed jobs and SeaweedFS as the maintained permissive S3-compatible candidate; it explicitly found no mature TypeScript multi-tenancy/RLS framework and assigned tenant isolation to Actionist.",
+      "limits": "No dependency tree, SBOM, runtime, tenant isolation or legal review was performed."
+    },
+    {
+      "source": "P10 identity/settings/navigation survey",
+      "classification": "RESEARCH_ONLY_NOT_ADMITTED",
+      "content_fact": "Identity and authorization are well supplied; settings schemas are not. Better Auth is the TypeScript library candidate, while the host must own its canonical tenant/workspace model and settings provenance.",
+      "limits": "Several P10 maintenance judgments were originally unverified; Better Auth maintenance is instead grounded in the separate P03 census."
+    },
+    {
+      "source": "P14 runtime/release/observability survey",
+      "classification": "RESEARCH_ONLY_NOT_ADMITTED",
+      "content_fact": "OpenTelemetry Collector and Prometheus were observed active under Apache-2.0; Kamal was observed active under MIT but its rollback restores images rather than current secrets or accessories.",
+      "limits": "No collector, backend, deployment or rollback was executed."
+    },
+    {
+      "source": "SISOCRM finance research",
+      "classification": "SECONDARY_LOCAL_MACHINERY_RECORD_SOURCE_CURRENTLY_UNAVAILABLE",
+      "content_fact": "The research records a real Stripe/RevenueCat subscription integration, idempotent provider-event migration and quota/entitlement update precedent.",
+      "limits": "The cited SISOCRM source checkout was absent when probed, so this lane does not elevate the summary to direct source verification."
+    }
+  ],
+  "maintained_oss_evidence_census": [
+    {
+      "repo": "better-auth/better-auth",
+      "candidate_for": "auth provider adapter",
+      "observed": "2026-08-27",
+      "maintenance_evidence": "active; pushed_at 2026-08-27; not archived",
+      "licence_evidence": "MIT from GitHub SPDX badge; body and transitive dependencies unverified",
+      "self_hosting": "library embedded in the Base service; Base owns storage and operation",
+      "disposition": "SELECTED_FUTURE_ADAPTER_PENDING_PACKAGE_AMENDMENT_AND_SPIKE"
+    },
+    {
+      "repo": "postgres/postgres",
+      "candidate_for": "system of record and native RLS",
+      "observed": "2026-08-27",
+      "maintenance_evidence": "top-tier current survey selection; exact pushed_at not retained in its row",
+      "licence_evidence": "PostgreSQL License read from COPYRIGHT body",
+      "self_hosting": "self-hosted or managed PostgreSQL",
+      "disposition": "SELECTED"
+    },
+    {
+      "repo": "drizzle-team/drizzle-orm",
+      "candidate_for": "typed query/schema adapter",
+      "observed": "2026-08-27",
+      "maintenance_evidence": "active; pushed_at 2026-08-26",
+      "licence_evidence": "Apache-2.0 from GitHub SPDX badge; transitive dependencies unverified",
+      "self_hosting": "library; no service",
+      "disposition": "SELECTED_FUTURE_ADAPTER_PENDING_PACKAGE_AMENDMENT"
+    },
+    {
+      "repo": "timgit/pg-boss",
+      "candidate_for": "background jobs",
+      "observed": "2026-08-27",
+      "maintenance_evidence": "active; pushed_at 2026-08-24",
+      "licence_evidence": "MIT from GitHub SPDX badge; transitive dependencies unverified",
+      "self_hosting": "uses the selected PostgreSQL service",
+      "disposition": "SELECTED_FUTURE_ADAPTER_PENDING_MEASURED_NEED_AND_PACKAGE_AMENDMENT"
+    },
+    {
+      "repo": "seaweedfs/seaweedfs",
+      "candidate_for": "S3-compatible object storage",
+      "observed": "2026-08-27",
+      "maintenance_evidence": "active; pushed_at 2026-08-27; not archived",
+      "licence_evidence": "Apache-2.0 body read",
+      "self_hosting": "self-hosted service; exact S3 operation compatibility requires a later spike",
+      "disposition": "SELECTED_SELF_HOSTED_CANDIDATE_BEHIND_S3_PORT"
+    },
+    {
+      "repo": "maildev/maildev",
+      "candidate_for": "local email capture only",
+      "observed": "2026-08-27",
+      "maintenance_evidence": "active; pushed_at 2026-08-26; not archived",
+      "licence_evidence": "MIT from GitHub SPDX badge; body and transitive dependencies unverified",
+      "self_hosting": "intact local SMTP-catching service; explicitly not production mail infrastructure",
+      "disposition": "SELECTED_LOCAL_ONLY_CANDIDATE"
+    },
+    {
+      "repo": "open-telemetry/opentelemetry-collector",
+      "candidate_for": "vendor-neutral telemetry transport",
+      "observed": "2026-08-27",
+      "maintenance_evidence": "very active; pushed_at 2026-08-27",
+      "licence_evidence": "Apache-2.0 from GitHub SPDX badge; body unverified",
+      "self_hosting": "self-hosted collector; requires a separate backend",
+      "disposition": "SELECTED_CONTRACT_AND_FUTURE_ADAPTER"
+    },
+    {
+      "repo": "prometheus/prometheus",
+      "candidate_for": "metrics and alert input",
+      "observed": "2026-08-27",
+      "maintenance_evidence": "very active; pushed_at 2026-08-27",
+      "licence_evidence": "Apache-2.0 from GitHub SPDX badge; body unverified",
+      "self_hosting": "self-hosted service; long-term storage and HA require additional components",
+      "disposition": "SELECTED_ALTERNATIVE_BACKEND"
+    },
+    {
+      "repo": "basecamp/kamal",
+      "candidate_for": "single-host deployment contract",
+      "observed": "2026-08-27",
+      "maintenance_evidence": "active; pushed_at 2026-08-12",
+      "licence_evidence": "MIT from GitHub SPDX badge; body unverified",
+      "self_hosting": "deploys container images to owned servers over SSH",
+      "disposition": "SELECTED_REFERENCE_CONTRACT_NOT_EXECUTED"
+    }
+  ],
+  "coordination": {
+    "base_saas": {
+      "contract_sha256": "8acb2bcf1c2f8e91376c4883be632ab24da179bccc11f60a0619426483a75378",
+      "consumer_interface_sha256": "05e9229fef9a2f2d8ead753d0a3dbcd6508232f239f89f31692ac9b5e684fa2b",
+      "content_fact": "BASE-SAAS-SOL owns login, session authority, selected tenant/workspace, capability grants, host registry and semantic donor read-back; its contract explicitly reserves platform providers, migrations and entitlements to this lane.",
+      "runtime_state": "SOURCE_CANDIDATE_RUNTIME_UNPROVEN"
+    },
+    "base_ux_shell": {
+      "coordination_sha256": "161e12842ae33f76fe6b66630013585f2d67bb179f4f45c45631a59796cc1439",
+      "collision_verdict": "NO_PATH_OVERLAP",
+      "requested_boundary": "PlatformReadPort plus account/workspace/billing/entitlement read models carrying explicit evidence state; no UI provider mutation or Base auth authority."
+    }
+  },
+  "decision": {
+    "verdict": "EXTEND_THINLY_WITH_BASE_OWNED_PERSISTENCE_AND_ENTITLEMENT_SPINE",
+    "must_preserve": [
+      "Existing Base host lifecycle, registry and fail-closed donor semantic read-back",
+      "BASE-SAAS-SOL authority over login/session selection/capability decisions",
+      "BASE-UX-SHELL-SOL ownership of all UI composition",
+      "Explicit donor namespace ownership and no cross-owner table writes"
+    ],
+    "must_not_claim": [
+      "production authentication",
+      "database or RLS execution",
+      "Stripe webhook correctness",
+      "email deliverability",
+      "job execution",
+      "backup or restore capability",
+      "deployment or observability readiness"
+    ]
+  },
+  "source_evidence": [
+    {"path": "package.json", "sha256": "34afc0292fac0b135c7abe42c5d436894d92ff31557632cb76ea852fcda81747"},
+    {"path": "src/host.ts", "sha256": "dfc276ae5504ce41cd146e2446ac93552604434a7c347d968709137ebfb723e1"},
+    {"path": "src/sdk/core.ts", "sha256": "2d4646a29466e509f295c22749040a4b6ffd68e0db4a96b8f55d0d3d1665818e"},
+    {"path": "docs/BLOCK-SDK-CANDIDATE.md", "sha256": "c48b11370159ad63ffd9c5bf449a74b39fc4225a1126ad5eb449b418cfc08cb3"},
+    {"path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/workstreams/p09-data-plane/runs/2026-08-27-sprint-1-fable/top-repos.jsonl", "sha256": "bbbf86f74af3ec730e550bbb319ee034b5117132d092efa61b61cc0a849b070e"},
+    {"path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/workstreams/p09-data-plane/runs/2026-08-27-sprint-1-fable/oss-survey-notes.md", "sha256": "2c71de2030e0dec96504a606ae9a8b76b71e9071b0510ca36ba728707801a783"},
+    {"path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/workstreams/p09-data-plane/runs/2026-08-27-sprint-1-fable/decision-ledger.json", "sha256": "a0775e2830711fe1295a469d56a8d662c81aba92c63076c51342bf452ed961e0"},
+    {"path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/site/system-map/artifacts/p03/raw/top-repos.jsonl", "sha256": "9b854a045b085e55730a6c22b25343b450cd89fdce5bbc5a949cf92a17e3931f"},
+    {"path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/workstreams/p10-identity-settings-navigation/runs/2026-08-27-sprint-1-fable/research-report.md", "sha256": "519dddd70e803617f6e6694e4c031caafb00d229c945bda9794a01dffee87484"},
+    {"path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/workstreams/p14-runtime-sandbox-release/runs/2026-08-27-sprint-1-fable/top-repos.jsonl", "sha256": "5068dbb3c9a195088d1e2ac1dd8052bbba27772b4095c18e4cb85fd6538aa77e"},
+    {"path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/packs/source-files/finance-ops-research.md", "sha256": "a7ed07876eb7cb94da8858fe867a651389922594caedab5bce45be6d49d9b15d"}
+  ]
+}

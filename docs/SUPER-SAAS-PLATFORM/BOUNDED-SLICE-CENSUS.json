@@ -1,0 +1,195 @@
+{
+  "schema_version": "actionist.super-saas.platform-bounded-slice-census.v1",
+  "assignment_id": "AM-033",
+  "owner": "BASE-PLATFORM-SOL",
+  "recorded_at": "2026-08-30T10:29:59Z",
+  "state": "FROZEN_PRE_SOURCE_MUTATION",
+  "identity": {
+    "branch": "am/base-platform-super-saas-cde61b-20260830",
+    "baseline_commit": "cde61b238307e38f2868c7425a0b7c7791004833",
+    "baseline_tree": "00d5ec13febe4289c4ed3ac30e3e6791ef87db45",
+    "pre_mutation_tracked_files": 68,
+    "pre_mutation_tracked_bytes": 1505152,
+    "pre_mutation_owned_source_roots": "ABSENT",
+    "pre_mutation_change": "Only the audit, ADR matrix and this census exist under the owned documentation root; src/platform, migrations/actionist-host and scripts/platform remain absent at this gate."
+  },
+  "gate_evidence": [
+    {
+      "path": "docs/SUPER-SAAS-PLATFORM/EXISTING-MACHINERY-AUDIT.json",
+      "sha256": "399b4e1dd2389a4fa6188da748e99ef117e461ad1b2769af53feb1371eb7cc7f",
+      "state": "PUBLISHED_PRE_SOURCE_MUTATION_STATIC_ONLY"
+    },
+    {
+      "path": "docs/SUPER-SAAS-PLATFORM/ADR-MATRIX.json",
+      "sha256": "5ee179ed49255f5892914dab3a0022a6ab3870c59b31a1287fd6845fc70d3373",
+      "state": "SELECTED_SOURCE_CONTRACTS_RUNTIME_UNPROVEN"
+    }
+  ],
+  "exact_repo_path_census": [
+    {
+      "path": "docs/SUPER-SAAS-PLATFORM/EXISTING-MACHINERY-AUDIT.json",
+      "kind": "audit",
+      "action": "ADD"
+    },
+    {
+      "path": "docs/SUPER-SAAS-PLATFORM/ADR-MATRIX.json",
+      "kind": "decision_record",
+      "action": "ADD"
+    },
+    {
+      "path": "docs/SUPER-SAAS-PLATFORM/BOUNDED-SLICE-CENSUS.json",
+      "kind": "scope_gate",
+      "action": "ADD"
+    },
+    {
+      "path": "docs/SUPER-SAAS-PLATFORM/LOCAL-DEV-CONTRACT.md",
+      "kind": "operator_contract",
+      "action": "ADD"
+    },
+    {
+      "path": "docs/SUPER-SAAS-PLATFORM/DEPLOY-BACKUP-RESTORE-CONTRACT.md",
+      "kind": "operator_contract",
+      "action": "ADD"
+    },
+    {
+      "path": "docs/SUPER-SAAS-PLATFORM/SUPER-SAAS-PLATFORM-INTEGRATION-GUIDE.md",
+      "kind": "handoff_contract",
+      "action": "ADD"
+    },
+    {
+      "path": "src/platform/contracts.ts",
+      "kind": "public_types",
+      "action": "ADD"
+    },
+    {
+      "path": "src/platform/ports.ts",
+      "kind": "replaceable_ports",
+      "action": "ADD"
+    },
+    {
+      "path": "src/platform/spine.ts",
+      "kind": "provider_neutral_spine",
+      "action": "ADD"
+    },
+    {
+      "path": "src/platform/spine.test.ts",
+      "kind": "authored_source_test_not_executed",
+      "action": "ADD"
+    },
+    {
+      "path": "src/platform/index.ts",
+      "kind": "public_barrel",
+      "action": "ADD"
+    },
+    {
+      "path": "migrations/actionist-host/0001_platform_spine.sql",
+      "kind": "postgres_migration",
+      "action": "ADD"
+    },
+    {
+      "path": "scripts/platform/clean-install-test.sql",
+      "kind": "authored_clean_install_database_test_not_executed",
+      "action": "ADD"
+    }
+  ],
+  "counts": {
+    "exact_repo_paths": 13,
+    "adds": 13,
+    "modifies": 0,
+    "deletes": 0,
+    "documentation": 6,
+    "typescript_source": 4,
+    "typescript_test": 1,
+    "postgres_migration": 1,
+    "postgres_clean_install_test": 1
+  },
+  "public_contract": {
+    "src/platform/contracts.ts": [
+      "PlatformEvidenceState",
+      "PlatformAccessFactsRequest",
+      "PlatformAccessFacts",
+      "PlatformEntitlementFact",
+      "PlatformAccountReadModel",
+      "PlatformWorkspaceReadModel",
+      "PlatformBillingReadModel",
+      "PlatformEntitlementReadModel"
+    ],
+    "src/platform/ports.ts": [
+      "PlatformAccessFactsPort",
+      "PlatformReadPort",
+      "PlatformStore",
+      "PlatformClock"
+    ],
+    "src/platform/spine.ts": [
+      "PlatformSpine"
+    ],
+    "truth_states": [
+      "fixture",
+      "configured-unverified",
+      "observed",
+      "unavailable"
+    ]
+  },
+  "database_contract": {
+    "schema": "actionist_host",
+    "tables": [
+      "users",
+      "user_identities",
+      "tenants",
+      "tenant_memberships",
+      "workspaces",
+      "workspace_memberships",
+      "sessions",
+      "billing_accounts",
+      "billing_events",
+      "entitlement_grants",
+      "audit_entries"
+    ],
+    "policy": "Tenant/workspace records use native PostgreSQL row-level security driven by transaction-local actionist.* settings. Composite constraints prevent cross-tenant workspace or membership references. Session secrets are hashes only and are excluded from public ports.",
+    "execution_state": "NOT_RUN_DATABASE_HELD"
+  },
+  "coordination": {
+    "base_saas": {
+      "dispatch_id": "BASE-R2-PLATFORM-001",
+      "receipt_ref": "SISO_AGENCY_RUN_ROOT/action-model-base-platform-2026-08-30/BASE-SAAS-SOL-R2-COORDINATION.json",
+      "receipt_sha256": "5d6ae651a96ac2b1af2d9894c8f6b2cb2890c4f1f0514d9a26bc7107501921f8",
+      "path_overlap": "NONE",
+      "boundary": "Base owns host authentication/session/scope/capability/registry authority; Platform provides persistent access facts and entitlements but cannot grant host access."
+    },
+    "base_ux_shell": {
+      "receipt_ref": "SISO_AGENCY_RUN_ROOT/action-model-base-ux-shell-2026-08-30/BASE-PLATFORM-SOL-COORDINATION.json",
+      "receipt_sha256": "161e12842ae33f76fe6b66630013585f2d67bb179f4f45c45631a59796cc1439",
+      "path_overlap": "NONE",
+      "boundary": "UX may consume PlatformReadPort truth-labelled account/workspace/billing/entitlement read models and may not fabricate provider or authority state."
+    }
+  },
+  "explicit_exclusions": [
+    "Every existing src/** path outside src/platform/**",
+    "package.json and every manifest or lockfile",
+    "toolchain and repository configuration",
+    "BASE-SAAS-SOL and BASE-UX-SHELL-SOL owned paths",
+    "provider SDK adapters and network clients",
+    "login, assertion issue, selected-scope, capability, registry, route, navigation and donor-mount authority",
+    "runtime execution, qualification and admission evidence"
+  ],
+  "held_verification": {
+    "package_manager": "NOT_RUN_HELD",
+    "dependency_acquisition": "NOT_RUN_HELD",
+    "tests": "NOT_RUN_COMPUTE_HELD",
+    "typecheck": "NOT_RUN_COMPUTE_HELD",
+    "build": "NOT_RUN_COMPUTE_HELD",
+    "database": "NOT_RUN_DATABASE_HELD",
+    "services": "NOT_RUN_HELD",
+    "browser": "NOT_RUN_HELD",
+    "push": "STOP_BEFORE_PUSH_PM_REVIEW_REQUIRED"
+  },
+  "allowed_static_checks": [
+    "JSON parse",
+    "exact path census",
+    "git diff inspection",
+    "git diff --check",
+    "secret-pattern scan",
+    "private-absolute-path scan",
+    "SHA-256 receipts"
+  ]
+}

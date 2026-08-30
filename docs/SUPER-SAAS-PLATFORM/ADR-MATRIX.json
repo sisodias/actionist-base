@@ -1,0 +1,294 @@
+{
+  "schema_version": "actionist.super-saas.adr-matrix.v1",
+  "recorded_at": "2026-08-30T10:22:17Z",
+  "assignment_id": "AM-033",
+  "owner": "BASE-PLATFORM-SOL",
+  "state": "SELECTED_SOURCE_CONTRACTS_RUNTIME_UNPROVEN",
+  "decision_policy": [
+    "Base owns canonical user, tenant, workspace, membership, session persistence and entitlement meaning; providers contribute facts through replaceable seams.",
+    "No provider SDK or service is added in this packet. Every dependency requires an exact PM amendment.",
+    "A selected future adapter is not installed, configured, executed, qualified or admitted.",
+    "Licence evidence is scoped exactly to the observed top-level repository record. Badge-only and unverified transitive licences remain explicit.",
+    "Provider configuration is never runtime evidence; read models expose fixture, configured-unverified, observed and unavailable states."
+  ],
+  "decisions": [
+    {
+      "id": "ADR-PLATFORM-001",
+      "concern": "auth_session_tenant_workspace",
+      "selected": {
+        "authority": "Base-owned canonical user/tenant/workspace/membership/session records with BASE-SAAS-SOL retaining login, selection, capability and assertion authority",
+        "future_provider_adapter": "better-auth/better-auth",
+        "adoption_state": "CONTRACT_SELECTED_PROVIDER_NOT_INSTALLED"
+      },
+      "default": "Persist opaque provider and subject references behind the Base identity model; never make provider organizations or roles the canonical tenant/workspace model.",
+      "alternatives": [
+        {"name": "Keycloak", "fit": "separate mature IdP service", "licence": "Apache-2.0 badge evidence", "hosting": "self-hosted JVM service", "reason_not_default": "operationally heavy and owns a separate admin/login UI"},
+        {"name": "Ory Kratos", "fit": "headless identity service", "licence": "Apache-2.0 badge evidence; several enterprise-only features", "hosting": "self-hosted service", "reason_not_default": "requires every identity flow UI and an additional service"},
+        {"name": "Logto", "fit": "multi-tenant IdP", "licence": "MPL-2.0 body read", "hosting": "self-hosted service", "reason_not_default": "file-level copyleft and service weight"}
+      ],
+      "maturity": {
+        "evidence": "Better Auth observed 2026-08-27 with 29,711 stars, pushed that day, not archived, tests/docs/CI visible.",
+        "limits": "No package, API, organization-plugin, security, migration, tenancy or revocation spike ran in this lane."
+      },
+      "licence": {
+        "selected_provider": "MIT from GitHub SPDX badge",
+        "certainty": "TOP_LEVEL_BADGE_ONLY",
+        "unknowns": ["LICENSE body", "subdirectory overrides", "transitive dependency licences"]
+      },
+      "hosting_implications": "Better Auth is a library, so Base owns its deployment, database, migrations and incident surface. Provider replacement must preserve Base IDs and external identity links.",
+      "replacement_seam": "External provider key + opaque subject maps to a Base user; session persistence and tenant/workspace membership remain provider-neutral.",
+      "implemented_in_slice": "Canonical persistence records and fail-closed read spine only; no credential handling, login UI, assertion minting or provider SDK."
+    },
+    {
+      "id": "ADR-PLATFORM-002",
+      "concern": "postgres_system_of_record",
+      "selected": {
+        "product": "PostgreSQL",
+        "scope": "Actionist-host owned transactional records only",
+        "adoption_state": "RAW_SQL_MIGRATION_AUTHORED_NOT_EXECUTED"
+      },
+      "default": "One actionist_host schema with explicit table and migration ownership; donor-native schemas remain donor-owned.",
+      "alternatives": [
+        {"name": "separate database per tenant", "licence": "inherits PostgreSQL", "hosting": "higher backup, connection and migration overhead", "reason_not_default": "premature operational multiplication"},
+        {"name": "SQLite/libSQL", "licence": "not evaluated in this packet", "hosting": "process-local or per-tenant", "reason_not_default": "not the programme-selected durable multi-tenant system of record"}
+      ],
+      "maturity": {"evidence": "PostgreSQL is the P09 top-tier system-of-record selection.", "limits": "No server, connection, role, extension, version or managed provider was inspected here."},
+      "licence": {"selected_product": "PostgreSQL License read from COPYRIGHT body", "certainty": "BODY_VERIFIED_IN_PRIOR_SURVEY"},
+      "hosting_implications": "Replaceable between self-hosted and managed PostgreSQL only if required version, extensions, role/RLS behavior, WAL and restore contract are preserved.",
+      "replacement_seam": "PlatformStore interface plus SQL migration lineage; callers do not import a PostgreSQL client.",
+      "implemented_in_slice": "Schema, constraints, RLS policies and source contracts; no database connection or execution."
+    },
+    {
+      "id": "ADR-PLATFORM-003",
+      "concern": "orm_migrations_rls",
+      "selected": {
+        "current_migration_format": "ordered raw PostgreSQL SQL",
+        "future_query_adapter": "drizzle-team/drizzle-orm",
+        "tenancy_enforcement": "native PostgreSQL RLS plus composite tenant foreign keys and application fail-closed checks",
+        "adoption_state": "SQL_SELECTED_DRIZZLE_PENDING_AMENDMENT"
+      },
+      "default": "Migration 0001 is dependency-free SQL. Drizzle may later map Actionist-owned tables but cannot own donor schemas or replace RLS.",
+      "alternatives": [
+        {"name": "Atlas", "licence": "Apache-2.0 body read", "hosting": "CLI/service boundary; some features cloud/pro gated", "fit": "future drift detection", "reason_not_default": "OSS feature boundary must be confirmed before dependency"},
+        {"name": "Prisma", "licence": "UNVERIFIED_IN_THIS_PACKET", "hosting": "library and migration CLI", "reason_not_default": "no local RLS/transaction-context decision evidence"},
+        {"name": "Kysely", "licence": "UNVERIFIED_IN_THIS_PACKET", "hosting": "library", "reason_not_default": "not selected by the prior data-plane survey"}
+      ],
+      "maturity": {"evidence": "Drizzle observed active, 35.6k stars and pushed 2026-08-26.", "limits": "Historical API churn noted; no current package compatibility or migration execution checked."},
+      "licence": {"future_query_adapter": "Apache-2.0 from GitHub SPDX badge", "certainty": "TOP_LEVEL_BADGE_ONLY"},
+      "hosting_implications": "RLS behavior is database-native and survives ORM replacement. Migration runner choice must preserve ordered checksums, transactional safety and one owner.",
+      "replacement_seam": "PlatformStore is the only source-code boundary; SQL schema is authoritative for this bounded slice.",
+      "implemented_in_slice": "Raw SQL migration and repository port; no Drizzle import or manifest edit."
+    },
+    {
+      "id": "ADR-PLATFORM-004",
+      "concern": "stripe_billing_webhooks_entitlements",
+      "selected": {
+        "billing_provider_target": "Stripe Billing",
+        "authority": "Base-owned billing event facts and entitlement grants",
+        "adoption_state": "PROVIDER_CONTRACT_SELECTED_NO_SDK_NO_WEBHOOK_RUNTIME"
+      },
+      "default": "Stripe customer/subscription/event identifiers are opaque provider facts. Only active Base entitlement grants authorize product capability; configuration or webhook receipt alone never does.",
+      "alternatives": [
+        {"name": "Lago", "licence": "UNVERIFIED_IN_THIS_PACKET", "hosting": "self-hostable candidate", "status": "SEEDED_NOT_QUALIFIED"},
+        {"name": "Kill Bill", "licence": "UNVERIFIED_IN_THIS_PACKET", "hosting": "self-hostable candidate", "status": "SEEDED_NOT_QUALIFIED"},
+        {"name": "OpenMeter", "licence": "UNVERIFIED_IN_THIS_PACKET", "hosting": "self-hostable candidate", "status": "SEEDED_NOT_QUALIFIED"}
+      ],
+      "maturity": {"evidence": "Local finance research records an earlier real Stripe/RevenueCat subscription, payment-event and entitlement/quota precedent.", "limits": "The cited source checkout was absent; no direct source, SDK, account, webhook, signature, retry or reconciliation check occurred."},
+      "licence": {"service": "PROPRIETARY_HOSTED_SERVICE_NOT_OPEN_SOURCE", "client_sdk": "NOT_SELECTED_OR_EVALUATED"},
+      "hosting_implications": "Stripe is not self-hostable. Provider replacement is feasible only because Base IDs, idempotent events and grants do not use Stripe objects as canonical authority.",
+      "replacement_seam": "Opaque billing provider/account/subscription/event references feed Base-owned facts; entitlement reads are provider-neutral.",
+      "implemented_in_slice": "Billing account, event and entitlement schema plus read decisions; no checkout, portal, webhook handler or mutation command."
+    },
+    {
+      "id": "ADR-PLATFORM-005",
+      "concern": "s3_object_storage",
+      "selected": {
+        "contract": "S3-compatible object port",
+        "self_hosted_candidate": "seaweedfs/seaweedfs",
+        "managed_alternative": "AWS S3-compatible managed service",
+        "adoption_state": "CONTRACT_SELECTED_NO_STORAGE_RUNTIME"
+      },
+      "default": "Provider-neutral bucket, object key, checksum, size, content type, retention and tenant namespace; never persist provider credentials in platform records.",
+      "alternatives": [
+        {"name": "MinIO", "licence": "AGPL-3.0 and archived in the 2026-08-27 survey", "hosting": "self-hosted", "reason_not_default": "archive and network-copyleft risk"},
+        {"name": "Garage", "licence": "AGPL-3.0 in the prior survey", "hosting": "self-hosted", "reason_not_default": "network-copyleft posture"}
+      ],
+      "maturity": {"evidence": "SeaweedFS observed active, 34.3k stars, pushed 2026-08-27.", "limits": "Specific S3 operations, tenant isolation, encryption, deletion and restore were not tested."},
+      "licence": {"self_hosted_candidate": "Apache-2.0 body read", "certainty": "TOP_LEVEL_BODY_VERIFIED"},
+      "hosting_implications": "SeaweedFS adds an operated storage service; managed S3 shifts operation to a provider. Both require independent object and database backup consistency.",
+      "replacement_seam": "S3-compatible object contract; no provider URL or bucket enters a UI authority model.",
+      "implemented_in_slice": "ADR and workspace read-model state only; no upload or object code."
+    },
+    {
+      "id": "ADR-PLATFORM-006",
+      "concern": "transactional_email",
+      "selected": {
+        "contract": "SMTP/provider-neutral email outbox",
+        "local_default": "maildev/maildev",
+        "production_provider": "UNSELECTED",
+        "adoption_state": "LOCAL_CONTRACT_SELECTED_PRODUCTION_HELD"
+      },
+      "default": "MailDev is only a local catcher. Production mail requires a separately amended provider, domain, sender, bounce/complaint and deliverability receipt.",
+      "alternatives": [
+        {"name": "managed SMTP/API provider", "licence": "provider-specific proprietary service", "hosting": "managed", "status": "REQUIRES_ACCOUNT_AND_PM_AMENDMENT"},
+        {"name": "Novu", "licence": "MIT core with commercial enterprise/packages", "hosting": "self-hosted service", "reason_not_default": "broader notification platform than this slice needs"}
+      ],
+      "maturity": {"evidence": "MailDev observed active, 6,035 stars, pushed 2026-08-26, tests/docs/CI/container visible.", "limits": "Explicitly a development catcher, not production infrastructure."},
+      "licence": {"local_default": "MIT from GitHub SPDX badge", "certainty": "TOP_LEVEL_BADGE_ONLY"},
+      "hosting_implications": "Local setup runs one disposable SMTP catcher. No production hosting or deliverability claim exists.",
+      "replacement_seam": "EmailOutbox record and transport port in a future amended slice; templates and delivery facts remain Base-owned.",
+      "implemented_in_slice": "ADR only."
+    },
+    {
+      "id": "ADR-PLATFORM-007",
+      "concern": "background_jobs",
+      "selected": {
+        "future_adapter": "timgit/pg-boss",
+        "substrate": "selected PostgreSQL",
+        "adoption_state": "SELECTED_PENDING_MEASURED_NEED_AND_PACKAGE_AMENDMENT"
+      },
+      "default": "Transactional Postgres-backed jobs for bounded TypeScript work; every payload carries tenant/workspace context, idempotency and an audit correlation identifier.",
+      "alternatives": [
+        {"name": "graphile-worker", "licence": "MIT badge evidence", "hosting": "uses PostgreSQL", "reason_not_default": "near-total overlap with pg-boss"},
+        {"name": "Temporal", "licence": "MIT body evidence", "hosting": "substantial operated service", "reason_not_default": "defer until resumable multi-step workflow need is measured"}
+      ],
+      "maturity": {"evidence": "pg-boss observed steadily maintained, 3.9k stars and pushed 2026-08-24.", "limits": "No throughput, retry, shutdown, tenancy or schema compatibility check ran."},
+      "licence": {"future_adapter": "MIT from GitHub SPDX badge", "certainty": "TOP_LEVEL_BADGE_ONLY"},
+      "hosting_implications": "Adds no new service but increases load and operational coupling on PostgreSQL.",
+      "replacement_seam": "Job port and persisted job identity; no job adapter enters the bounded slice.",
+      "implemented_in_slice": "ADR only."
+    },
+    {
+      "id": "ADR-PLATFORM-008",
+      "concern": "audit_log",
+      "selected": {
+        "product": "Base-owned append-only actionist_host.audit_entries on PostgreSQL",
+        "adoption_state": "SOURCE_MIGRATION_AUTHORED_NOT_EXECUTED"
+      },
+      "default": "Tenant-scoped immutable records with actor, action, target, correlation, occurred-at and redacted JSON metadata; updates and deletes are denied by trigger.",
+      "alternatives": [
+        {"name": "external SIEM/log backend", "licence": "provider-specific", "hosting": "managed or self-hosted", "reason_not_default": "export target, not canonical audit authority"}
+      ],
+      "maturity": {"evidence": "Builds on the selected PostgreSQL substrate and existing HostContext correlation fields.", "limits": "Retention, partitioning, tamper-evident sealing, export, legal hold and operator access remain unverified."},
+      "licence": {"product": "inherits PostgreSQL License; new Actionist source remains repository-owned", "certainty": "SOURCE_ONLY"},
+      "hosting_implications": "Audit volume shares PostgreSQL until measured; retention and backup must be explicit before runtime use.",
+      "replacement_seam": "Audit sink may export copies, but the Base record identity and append-only semantics remain stable.",
+      "implemented_in_slice": "Table, RLS and append-only trigger only."
+    },
+    {
+      "id": "ADR-PLATFORM-009",
+      "concern": "feature_flags",
+      "selected": {
+        "initial_default": "Base-owned PostgreSQL flag records behind a future evaluator",
+        "external_alternative": "Flagsmith",
+        "adoption_state": "DEFAULT_DECIDED_IMPLEMENTATION_DEFERRED"
+      },
+      "default": "Deny/off when a flag or evaluation context is missing; feature visibility never widens Base capability or entitlement authority.",
+      "alternatives": [
+        {"name": "Flagsmith", "licence": "BSD-3-Clause for most platform; enterprise features paid", "hosting": "self-hosted service", "reason_not_default": "flat remote config and extra service are unnecessary for the first slice"},
+        {"name": "Unleash", "licence": "AGPL-3.0-or-later badge evidence", "hosting": "self-hosted service", "reason_not_default": "network-copyleft posture"},
+        {"name": "GrowthBook", "licence": "MIT bulk with commercial enterprise directories", "hosting": "self-hosted service", "reason_not_default": "open-core boundary and experiment scope exceed first need"}
+      ],
+      "maturity": {"evidence": "P10 surveyed the alternatives and found flag platforms are not hierarchical settings registries.", "limits": "Commit recency was not verified in the P10 run; no evaluator API or provider compatibility was inspected."},
+      "licence": {"initial_default": "no external dependency", "certainty": "SOURCE_ONLY"},
+      "hosting_implications": "Initial default adds no service; external replacement adds a control plane and must preserve fail-closed semantics.",
+      "replacement_seam": "FeatureFlagEvaluator in a future amended slice.",
+      "implemented_in_slice": "ADR only; no flag table in migration 0001."
+    },
+    {
+      "id": "ADR-PLATFORM-010",
+      "concern": "observability_and_health",
+      "selected": {
+        "contract": "OpenTelemetry-compatible resource and trace context",
+        "future_collector": "open-telemetry/opentelemetry-collector",
+        "metrics_alternative": "prometheus/prometheus",
+        "adoption_state": "CONTRACT_SELECTED_NO_INSTRUMENTATION"
+      },
+      "default": "Carry service.name, service.version, deployment environment, tenant-safe correlation ID and per-capability health state; never emit tenant secrets or raw session/provider tokens.",
+      "alternatives": [
+        {"name": "Sentry self-hosted", "licence": "FSL-1.1 with Apache-2.0 future licence", "hosting": "self-hosted service", "reason_not_default": "internal use may fit but client-facing bundling needs legal review"},
+        {"name": "Grafana/Loki/Tempo", "licence": "AGPL-3.0 badge evidence; bodies unread in prior survey", "hosting": "self-hosted services", "reason_not_default": "licence and operational surface; usable as external services after review"}
+      ],
+      "maturity": {"evidence": "OTel Collector and Prometheus were observed very active and pushed 2026-08-27; both are widely adopted standards.", "limits": "No SDK, exporter, collector, backend, retention or alert path was configured."},
+      "licence": {"collector_and_prometheus": "Apache-2.0 from GitHub SPDX badges", "certainty": "TOP_LEVEL_BADGE_ONLY"},
+      "hosting_implications": "Collector is plumbing and still requires a backend; Prometheus adds metric storage and alert operations.",
+      "replacement_seam": "Telemetry exporters remain downstream of stable redacted attributes and the existing semantic health contract.",
+      "implemented_in_slice": "Evidence-state read models only."
+    },
+    {
+      "id": "ADR-PLATFORM-011",
+      "concern": "config_and_secrets",
+      "selected": {
+        "config_default": "typed environment/config provider",
+        "secret_default": "opaque secret_ref only",
+        "secret_service": "UNSELECTED",
+        "adoption_state": "CONTRACT_SELECTED_NO_SECRET_RUNTIME"
+      },
+      "default": "Startup validation fails closed for missing required config. Persist references and provenance, never secret values.",
+      "alternatives": [
+        {"name": "Vault/OpenBao", "licence": "UNVERIFIED_IN_THIS_PACKET", "hosting": "self-hosted service", "status": "RESEARCH_REQUIRED"},
+        {"name": "Infisical", "licence": "UNVERIFIED_IN_THIS_PACKET", "hosting": "self-hosted or managed", "status": "RESEARCH_REQUIRED"}
+      ],
+      "maturity": {"evidence": "Current Base only has a small Vite env precedent; no central config or secret registry exists.", "limits": "Rotation, lease renewal, outage behavior and local secret tooling are not selected."},
+      "licence": {"selected_default": "no external dependency", "certainty": "SOURCE_ONLY"},
+      "hosting_implications": "Environment config has no new service but needs deployment-scoped injection. A secret service is a later operated dependency.",
+      "replacement_seam": "ConfigProvider and SecretResolver are future ports; persisted records contain only provider-neutral secret references.",
+      "implemented_in_slice": "ADR and documentation only."
+    },
+    {
+      "id": "ADR-PLATFORM-012",
+      "concern": "deployment",
+      "selected": {
+        "single_host_reference": "basecamp/kamal",
+        "portable_unit": "immutable application image plus versioned composition manifest",
+        "adoption_state": "REFERENCE_CONTRACT_ONLY_NOT_EXECUTED"
+      },
+      "default": "A deployment receipt must bind image digest, migration set, config version, secret-reference version, backup precondition and rollback horizon. Image rollback alone is insufficient.",
+      "alternatives": [
+        {"name": "Dokku", "licence": "MIT badge evidence", "hosting": "single-host self-hosted PaaS", "reason_not_default": "rollback/config behavior was not verified"},
+        {"name": "managed PaaS", "licence": "provider-specific proprietary service", "hosting": "managed", "reason_not_default": "provider not selected and account action held"}
+      ],
+      "maturity": {"evidence": "Kamal observed active, 14.5k stars, pushed 2026-08-12 and used by its maintainers in production.", "limits": "No image, Dockerfile, host, registry, SSH action, deploy or rollback exists in this packet."},
+      "licence": {"single_host_reference": "MIT from GitHub SPDX badge", "certainty": "TOP_LEVEL_BADGE_ONLY"},
+      "hosting_implications": "Kamal requires owned servers, SSH, image registry, proxy, TLS and operator responsibility. Its default rollback does not restore secrets or database state.",
+      "replacement_seam": "Versioned composition manifest and deployment receipt, not a Kamal-specific command API.",
+      "implemented_in_slice": "Contract document only."
+    },
+    {
+      "id": "ADR-PLATFORM-013",
+      "concern": "backup_and_restore",
+      "selected": {
+        "database_default": "PostgreSQL logical backup for portability plus WAL/PITR contract for recovery",
+        "object_target": "selected S3-compatible object port",
+        "operator_tool": "UNSELECTED",
+        "adoption_state": "CONTRACT_ONLY_NO_BACKUP_NO_RESTORE"
+      },
+      "default": "Every backup set binds database identity/version, migration head, tenant scope, object manifest, encryption/key reference, timestamps, retention and checksum. Restore must target a disposable environment first and produce read-back evidence.",
+      "alternatives": [
+        {"name": "pgBackRest", "licence": "UNVERIFIED_IN_THIS_PACKET", "hosting": "operator tool", "status": "RESEARCH_REQUIRED"},
+        {"name": "WAL-G", "licence": "UNVERIFIED_IN_THIS_PACKET", "hosting": "operator tool", "status": "RESEARCH_REQUIRED"},
+        {"name": "managed PostgreSQL backups", "licence": "provider-specific", "hosting": "managed", "status": "REQUIRES_PROVIDER_RECEIPT"}
+      ],
+      "maturity": {"evidence": "PostgreSQL is selected; P14 established that rollback must name database/config/external side effects separately.", "limits": "No backup tool was sufficiently source-verified in the available local packet, so none is selected by name."},
+      "licence": {"database_primitives": "PostgreSQL License", "operator_tool": "UNVERIFIED_UNSELECTED"},
+      "hosting_implications": "Self-hosting owns schedule, WAL archive, encryption, off-host retention, monitoring and restore drills; managed hosting still requires export and independent restore evidence.",
+      "replacement_seam": "BackupSet and RestoreReceipt contracts remain independent of the operator tool.",
+      "implemented_in_slice": "Contract document only."
+    }
+  ],
+  "cross_cutting_holds": [
+    "No provider dependency, SDK or manifest change",
+    "No test, typecheck, build, database, service, queue, webhook, listener, browser, deploy, backup or restore execution",
+    "No production-ready, qualified or admitted claim",
+    "No licence/legal conclusion beyond recorded source evidence",
+    "No secret, credential, external account or client data"
+  ],
+  "evidence_sources": [
+    {"id": "P03_OSS", "path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/site/system-map/artifacts/p03/raw/top-repos.jsonl", "sha256": "9b854a045b085e55730a6c22b25343b450cd89fdce5bbc5a949cf92a17e3931f"},
+    {"id": "P09_OSS", "path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/workstreams/p09-data-plane/runs/2026-08-27-sprint-1-fable/top-repos.jsonl", "sha256": "bbbf86f74af3ec730e550bbb319ee034b5117132d092efa61b61cc0a849b070e"},
+    {"id": "P09_LEDGER", "path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/workstreams/p09-data-plane/runs/2026-08-27-sprint-1-fable/decision-ledger.json", "sha256": "a0775e2830711fe1295a469d56a8d662c81aba92c63076c51342bf452ed961e0"},
+    {"id": "P10_REPORT", "path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/workstreams/p10-identity-settings-navigation/runs/2026-08-27-sprint-1-fable/research-report.md", "sha256": "519dddd70e803617f6e6694e4c031caafb00d229c945bda9794a01dffee87484"},
+    {"id": "P14_OSS", "path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/workstreams/p14-runtime-sandbox-release/runs/2026-08-27-sprint-1-fable/top-repos.jsonl", "sha256": "5068dbb3c9a195088d1e2ac1dd8052bbba27772b4095c18e4cb85fd6538aa77e"},
+    {"id": "FINANCE_RESEARCH", "path_ref": "SISO_AGENCY_ROOT/clients/actionmodel/research/packs/source-files/finance-ops-research.md", "sha256": "a7ed07876eb7cb94da8858fe867a651389922594caedab5bce45be6d49d9b15d"}
+  ]
+}
