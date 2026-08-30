@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { assertOneOwner, conformanceChecks, evaluateSession, namespaceDescriptor, runLifecycle, type SessionAdapter } from './core';
+import { assertOneOwner, conformanceChecks, evaluateSession, namespaceDescriptor, runLifecycle, type SessionAdapter, type SessionState } from './core';
 
 const context = { tenantId: 't', workspaceId: 'w', principalId: 'p', correlationId: 'c' };
+const sessionContract = { issuer: 'actionist-base', audience: 'actionist/fixture', clientId: 'fixture-client' };
+const activeState = (overrides: Partial<SessionState> = {}): SessionState => ({
+  authenticated: true,
+  issuer: sessionContract.issuer,
+  audience: sessionContract.audience,
+  clientId: sessionContract.clientId,
+  principalId: context.principalId,
+  tenantId: context.tenantId,
+  workspaceId: context.workspaceId,
+  expiresAt: new Date(Date.now() + 60_000).toISOString(),
+  capabilities: ['view', 'edit'],
+  ...overrides,
+});
 
 describe('internal block SDK candidate', () => {
   it('enforces one owner per namespace', () => {
@@ -10,23 +23,29 @@ describe('internal block SDK candidate', () => {
     expect(() => assertOneOwner([owned, { ...owned }])).not.toThrow();
   });
 
-  it('fails closed for wrong workspace, expiry, and missing capability', () => {
+  it('fails closed for identity, scope, audience, client, expiry, and missing capability', () => {
     expect(evaluateSession({ authenticated: false, workspaceId: 'w' }, context).status).toBe('unavailable');
-    expect(evaluateSession({ authenticated: true, workspaceId: 'other' }, context).detail).toContain('mismatch');
-    expect(evaluateSession({ authenticated: true, workspaceId: 'w', expiresAt: new Date(0).toISOString() }, context).detail).toContain('expired');
-    expect(conformanceChecks({ authenticated: true, workspaceId: 'w', capabilities: ['view'] }, context, ['edit']).capabilities).toBe(false);
+    expect(evaluateSession(activeState({ principalId: 'other' }), context, sessionContract).detail).toContain('principal');
+    expect(evaluateSession(activeState({ tenantId: 'other' }), context, sessionContract).detail).toContain('tenant');
+    expect(evaluateSession(activeState({ workspaceId: 'other' }), context, sessionContract).detail).toContain('workspace');
+    expect(evaluateSession(activeState({ issuer: 'other' }), context, sessionContract).detail).toContain('issuer');
+    expect(evaluateSession(activeState({ audience: 'other' }), context, sessionContract).detail).toContain('audience');
+    expect(evaluateSession(activeState({ clientId: 'other' }), context, sessionContract).detail).toContain('client');
+    expect(evaluateSession(activeState({ expiresAt: new Date(0).toISOString() }), context, sessionContract).detail).toContain('expired');
+    expect(conformanceChecks(activeState({ capabilities: ['view'] }), context, ['edit'], sessionContract).capabilities).toBe(false);
   });
 
   it('runs lifecycle in order and revokes once on cleanup', async () => {
     const order: string[] = [];
     const adapter: SessionAdapter<string> = {
       establish: async () => { order.push('establish'); return 'session'; },
-      inspect: async () => { order.push('inspect'); return { authenticated: true, workspaceId: 'w' }; },
+      inspect: async () => { order.push('inspect'); return activeState(); },
       revoke: async () => { order.push('revoke'); },
     };
     const target = document.createElement('div');
     const cleanup = await runLifecycle({
       id: 'fixture',
+      sessionContract,
       preload: async () => { order.push('preload'); },
       health: async () => { order.push('health'); return { status: 'healthy' }; },
       mount: async target => { order.push('mount'); target.innerHTML = '<span>mounted</span>'; return () => { order.push(`unmount:${target.childElementCount}`); }; },
@@ -56,7 +75,7 @@ describe('internal block SDK candidate', () => {
     let revoked = 0;
     const adapter: SessionAdapter<string> = {
       establish: async () => 'session',
-      inspect: async () => ({ authenticated: true, workspaceId: 'w', capabilities: ['view'] }),
+      inspect: async () => activeState({ capabilities: ['view'] }),
       revoke: async () => { revoked += 1; },
     };
     const cleanup = await runLifecycle({ id: 'fixture', mount: async () => { mounted = true; } }, document.createElement('div'), context, adapter, ['edit']);
@@ -70,7 +89,7 @@ describe('internal block SDK candidate', () => {
     let revoked = 0;
     const adapter: SessionAdapter<string> = {
       establish: async () => 'session',
-      inspect: async () => ({ authenticated: true, workspaceId: 'w' }),
+      inspect: async () => activeState(),
       revoke: async () => { revoked += 1; },
     };
     const target = document.createElement('div');
