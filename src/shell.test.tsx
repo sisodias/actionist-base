@@ -118,7 +118,7 @@ describe('grouped rail states and accessibility', () => {
     testStorage().setItem(SHELL_STORAGE_KEY, 'true');
     const html = renderToStaticMarkup(<DefaultShell recipe={recipe} active="/fixture" onNavigate={() => undefined}>content</DefaultShell>);
     expect(html).toContain('data-rail-state="compact"');
-    expect(html).toContain('data-verify-compact-destinations="4"');
+    expect(html).toContain('data-verify-compact-destinations="6"');
     expect(html).not.toContain('shell-rail__nav-group');
     expect(html).toContain('aria-label="Fixture block"');
     expect(readShellCollapsedPreference()).toBe(true);
