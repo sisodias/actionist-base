@@ -45,6 +45,7 @@ export type BaseSessionAuthorityOptions = {
   issueAssertion: HostAssertionIssuer;
   now?: () => number;
   createSessionId?: () => string;
+  createAccessId?: () => string;
   sessionTtlMs?: number;
 };
 
@@ -63,14 +64,17 @@ const DEFAULT_SESSION_TTL_MS = 5 * 60_000;
 export class BaseSessionAuthority {
   private readonly sessions = new Map<string, SessionRecord>();
   private readonly policies = new Map<string, HostAudiencePolicy>();
+  private readonly accessIds = new Set<string>();
   private readonly now: () => number;
   private readonly createSessionId: () => string;
+  private readonly createAccessId: () => string;
   private readonly sessionTtlMs: number;
 
   constructor(private readonly options: BaseSessionAuthorityOptions) {
     if (!options.issuer.trim()) throw new Error('host session issuer is required');
     this.now = options.now ?? Date.now;
     this.createSessionId = options.createSessionId ?? (() => globalThis.crypto.randomUUID());
+    this.createAccessId = options.createAccessId ?? (() => globalThis.crypto.randomUUID());
     this.sessionTtlMs = options.sessionTtlMs ?? DEFAULT_SESSION_TTL_MS;
     if (!Number.isFinite(this.sessionTtlMs) || this.sessionTtlMs <= 0) throw new Error('host session ttl must be positive');
     for (const policy of options.policies) {
@@ -122,6 +126,7 @@ export class BaseSessionAuthority {
 
   accessPort(sessionId: string | null | undefined): HostAccessPort {
     return {
+      inspect: async () => this.inspect(sessionId),
       issue: async (context, request) => {
         const record = this.requireActive(sessionId);
         if (
@@ -132,12 +137,16 @@ export class BaseSessionAuthority {
         ) {
           throw new HostSessionError('SCOPE_DENIED', 'Base access context denied');
         }
-        return this.issueAccess(sessionId, request);
+        return this.issueAccess(sessionId, request, context.correlationId);
       },
     };
   }
 
-  async issueAccess(sessionId: string | null | undefined, request: HostAccessRequest): Promise<HostAccessGrant> {
+  async issueAccess(
+    sessionId: string | null | undefined,
+    request: HostAccessRequest,
+    correlationId: string,
+  ): Promise<HostAccessGrant> {
     const record = this.requireActive(sessionId);
     const policy = this.policies.get(request.audience);
     if (!policy) throw new HostSessionError('AUDIENCE_DENIED', 'Base audience denied');
@@ -148,6 +157,11 @@ export class BaseSessionAuthority {
     if (!requestedCapabilities.every((capability) => sessionCapabilities.has(capability) && policyCapabilities.has(capability))) {
       throw new HostSessionError('CAPABILITY_DENIED', 'Base capability denied');
     }
+    const normalizedCorrelationId = correlationId.trim();
+    if (!normalizedCorrelationId) throw new HostSessionError('SCOPE_DENIED', 'Base access correlation denied');
+    const accessId = this.createAccessId().trim();
+    if (!accessId || this.accessIds.has(accessId)) throw new Error('host access id must be unique and non-empty');
+    this.accessIds.add(accessId);
 
     const issuedAtMs = this.now();
     const sessionExpiryMs = Date.parse(record.expiresAt);
@@ -158,6 +172,7 @@ export class BaseSessionAuthority {
       audience: policy.audience,
       clientId: policy.clientId,
       sessionId: record.sessionId,
+      accessId,
       principalId: record.principal.principalId,
       principalKind: record.principal.principalKind,
       tenantId: record.selection.tenantId,
@@ -165,15 +180,25 @@ export class BaseSessionAuthority {
       capabilities: requestedCapabilities,
       issuedAt: new Date(issuedAtMs).toISOString(),
       expiresAt,
+      correlationId: normalizedCorrelationId,
     };
     let assertion: string;
     try {
       assertion = await this.options.issueAssertion(claims);
     } catch {
+      this.accessIds.delete(accessId);
       throw new HostSessionError('ASSERTION_ISSUE_FAILED', 'Base assertion issue failed');
     }
-    if (!assertion.trim()) throw new HostSessionError('ASSERTION_ISSUE_FAILED', 'Base assertion issue failed');
-    this.requireActive(sessionId);
+    if (!assertion.trim()) {
+      this.accessIds.delete(accessId);
+      throw new HostSessionError('ASSERTION_ISSUE_FAILED', 'Base assertion issue failed');
+    }
+    try {
+      this.requireActive(sessionId);
+    } catch (error) {
+      this.accessIds.delete(accessId);
+      throw error;
+    }
     const readback: HostAccessReadback = {
       ...claims,
       authenticated: true,

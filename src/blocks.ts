@@ -1,4 +1,4 @@
-import { compareSemanticReadback, type BlockMount, type DonorSemanticReadback, type Health, type HostAccessGrant, type HostAccessPort, type HostAccessRequest, type HostContext, type KnowledgeIdentity, type KnowledgeRuntimeConfig } from './host';
+import { compareSemanticReadback, parseDonorSemanticReadback, type BlockMount, type Health, type HostAccessGrant, type HostAccessPort, type HostAccessRequest, type HostContext, type HostFailureReasonCode, type KnowledgeIdentity, type KnowledgeRuntimeConfig } from './host';
 import { clearKnowledgeEmbedConfig, createKnowledgeBindings, installKnowledgeEmbedConfig, knowledgeRuntime } from './knowledge';
 
 export const AFFINE_ACCESS_REQUEST: HostAccessRequest = {
@@ -50,9 +50,13 @@ export function affineBlock(access?: HostAccessPort, config: KnowledgeRuntimeCon
             clientId: identity.clientId,
             issuer: grant.readback.issuer,
             audience: grant.readback.audience,
+            sessionId: grant.readback.sessionId,
+            accessId: grant.readback.accessId,
             tenantId: grant.readback.tenantId,
             workspaceId: identity.workspaceId,
+            issuedAt: grant.readback.issuedAt,
             expiresAt: identity.expiresAt,
+            correlationId: grant.readback.correlationId,
             capabilities: identity.capabilities,
           },
           database: { config: { schema: 'knowledge', redisNamespace: 'knowledge', yjsNamespace: 'knowledge', blobNamespace: 'knowledge' } },
@@ -72,40 +76,44 @@ export function affineBlock(access?: HostAccessPort, config: KnowledgeRuntimeCon
       };
     },
     health: async (ctx) => {
-      if (!access) return { status: 'unavailable', detail: 'Base access port is not configured' };
+      if (!access) return unavailable('semantic_readback_unavailable', 'Base access port is not configured');
       try {
         const grant = await issue(ctx);
         const identity = knowledgeIdentityFromGrant(grant);
-        const response = await fetch(`${config.backendBase.replace(/\/$/, '')}/api/auth/session`, { credentials: 'include' });
-        if (!response.ok) return { status: 'unavailable', detail: `Knowledge backend unavailable (${response.status})` };
+        const response = await fetch(`${config.backendBase.replace(/\/$/, '')}/api/auth/session`, {
+          credentials: 'omit',
+          headers: { accept: 'application/json', 'x-siso-request-context': grant.assertion },
+        });
+        if (!response.ok) return unavailable('semantic_readback_unavailable', `Knowledge backend unavailable (${response.status})`);
         const session = await response.json() as { user?: { id?: string; workspaceId?: string } };
         if (session.user?.id !== identity.userId) {
-          return { status: 'unavailable', detail: 'Knowledge backend session mismatch' };
+          return unavailable('access_replay_denied', 'Knowledge backend session mismatch');
         }
         const workspaceResponse = await fetch(`${config.backendBase.replace(/\/$/, '')}/graphql`, {
           method: 'POST',
-          credentials: 'include',
+          credentials: 'omit',
           headers: { accept: 'application/json', 'content-type': 'application/json', 'x-siso-request-context': grant.assertion },
           body: JSON.stringify({
             query: 'query KnowledgeHealth($workspaceId: String!) { currentUser { id } workspace(id: $workspaceId) { id } }',
             variables: { workspaceId: identity.workspaceId },
           }),
         });
-        if (!workspaceResponse.ok) return { status: 'unavailable', detail: `Knowledge backend workspace unavailable (${workspaceResponse.status})` };
+        if (!workspaceResponse.ok) return unavailable('semantic_readback_unavailable', `Knowledge backend workspace unavailable (${workspaceResponse.status})`);
         const workspaceResult = await workspaceResponse.json() as { data?: { currentUser?: { id?: string }; workspace?: { id?: string } }; errors?: unknown[] };
         if (workspaceResult.errors?.length || workspaceResult.data?.currentUser?.id !== identity.userId || workspaceResult.data.workspace?.id !== identity.workspaceId) {
-          return { status: 'unavailable', detail: 'Knowledge backend workspace session mismatch' };
+          return unavailable('workspace_scope_mismatch', 'Knowledge backend workspace session mismatch');
         }
         const semanticPath = config.semanticReadbackPath ?? '/api/siso/host-context';
         const semanticResponse = await fetch(`${config.backendBase.replace(/\/$/, '')}${semanticPath.startsWith('/') ? semanticPath : `/${semanticPath}`}`, {
-          credentials: 'include',
+          credentials: 'omit',
           headers: { accept: 'application/json', 'x-siso-request-context': grant.assertion },
         });
-        if (!semanticResponse.ok) return { status: 'unavailable', detail: `Knowledge semantic readback unavailable (${semanticResponse.status})` };
-        const semanticReadback = await semanticResponse.json() as DonorSemanticReadback;
-        return compareSemanticReadback(grant.readback, semanticReadback);
+        if (!semanticResponse.ok) return unavailable('semantic_readback_unavailable', `Knowledge semantic readback unavailable (${semanticResponse.status})`);
+        const semanticReadback = parseDonorSemanticReadback(await semanticResponse.json());
+        const baseSession = await access.inspect();
+        return compareSemanticReadback(grant.readback, semanticReadback, baseSession);
       } catch (error) {
-        return { status: 'unavailable', detail: error instanceof Error ? error.message : 'Knowledge runtime unavailable' };
+        return unavailable(reasonFromAccessError(error), error instanceof Error ? error.message : 'Knowledge runtime unavailable');
       }
     },
   };
@@ -118,14 +126,45 @@ function assertGrantMatchesContext(grant: HostAccessGrant, ctx: HostContext, con
     || readback.principalId !== ctx.principalId
     || readback.tenantId !== ctx.tenantId
     || readback.workspaceId !== ctx.workspaceId
+    || readback.correlationId !== ctx.correlationId
     || readback.audience !== AFFINE_ACCESS_REQUEST.audience
     || readback.clientId !== config.expectedClientId
+    || !readback.sessionId.trim()
+    || !readback.accessId.trim()
   ) {
     throw new Error('Base access readback mismatch');
   }
-  if (!AFFINE_ACCESS_REQUEST.requiredCapabilities.every((capability) => readback.capabilities.includes(capability))) {
+  const expectedCapabilities = normalizeCapabilities(AFFINE_ACCESS_REQUEST.requiredCapabilities);
+  const grantedCapabilities = normalizeCapabilities(readback.capabilities);
+  if (
+    expectedCapabilities.length !== grantedCapabilities.length
+    || expectedCapabilities.some((capability, index) => capability !== grantedCapabilities[index])
+  ) {
     throw new Error('Base access capability denied');
   }
+}
+
+function unavailable(reasonCode: HostFailureReasonCode, detail: string): Health {
+  return { status: 'unavailable', reasonCode, detail };
+}
+
+function reasonFromAccessError(error: unknown): HostFailureReasonCode {
+  if (!error || typeof error !== 'object' || !('code' in error)) return 'semantic_readback_unavailable';
+  const reasons: Record<string, HostFailureReasonCode> = {
+    SESSION_MISSING: 'session_missing',
+    SESSION_EXPIRED: 'session_expired',
+    SESSION_REVOKED: 'session_revoked',
+    SESSION_LOGGED_OUT: 'session_logged_out',
+    AUDIENCE_DENIED: 'audience_denied',
+    CLIENT_DENIED: 'client_denied',
+    CAPABILITY_DENIED: 'capability_denied',
+    ASSERTION_ISSUE_FAILED: 'assertion_issue_failed',
+  };
+  return reasons[String((error as { code: unknown }).code)] ?? 'semantic_readback_unavailable';
+}
+
+function normalizeCapabilities(capabilities: readonly string[]): string[] {
+  return [...new Set(capabilities.map((capability) => capability.trim()).filter(Boolean))].sort();
 }
 
 function knowledgeIdentityFromGrant(grant: HostAccessGrant): KnowledgeIdentity {
