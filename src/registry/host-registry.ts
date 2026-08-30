@@ -1,4 +1,5 @@
-import type { BlockMount, NavGroup, NavItem } from '../host';
+import type { BlockMount, HostContext, HostFailureReasonCode, HostSessionReadback, NavGroup, NavItem } from '../host';
+import { workspaceIdFromPath } from '../tenancy/workspace-selection';
 
 export type HostBlockInstallation = {
   block: BlockMount;
@@ -7,6 +8,10 @@ export type HostBlockInstallation = {
   clientId?: string;
   requiredCapabilities: readonly string[];
 };
+
+export type HostRouteResolution =
+  | { ok: true; block?: BlockMount }
+  | { ok: false; reasonCode: HostFailureReasonCode };
 
 export class HostBlockRegistry {
   private readonly installations = new Map<string, HostBlockInstallation>();
@@ -43,20 +48,43 @@ export class HostBlockRegistry {
     return [...this.installations.values()].map(cloneInstallation);
   }
 
-  resolve(pathname: string, grantedCapabilities: readonly string[] = []): BlockMount | undefined {
-    const grants = new Set(grantedCapabilities);
-    return this.list()
-      .filter((installation) => installation.requiredCapabilities.every((capability) => grants.has(capability)))
-      .filter(({ block }) => pathname === block.route || pathname.startsWith(`${block.route}/`))
-      .map((installation) => installation.block)
-      .sort((left, right) => right.route.length - left.route.length)[0];
+  resolve(
+    pathname: string,
+    context: HostContext,
+    session: HostSessionReadback,
+    now = Date.now(),
+  ): BlockMount | undefined {
+    const resolution = this.resolveGuarded(pathname, context, session, now);
+    return resolution.ok ? resolution.block : undefined;
   }
 
-  navigationGroups(grantedCapabilities: readonly string[]): NavGroup[] {
-    const grants = new Set(grantedCapabilities);
+  resolveGuarded(
+    pathname: string,
+    context: HostContext,
+    session: HostSessionReadback,
+    now = Date.now(),
+  ): HostRouteResolution {
+    const authority = routeAuthority(context, session, now);
+    if (!authority.ok) return authority;
+    const pathWorkspaceId = workspaceIdFromPath(pathname);
+    if (pathWorkspaceId !== context.workspaceId) return { ok: false, reasonCode: 'workspace_scope_mismatch' };
+    const blockPath = pathname.replace(/^\/w\/[^/]+/, '') || '/';
+    const installation = this.list()
+      .filter(({ block }) => blockPath === block.route || blockPath.startsWith(`${block.route}/`))
+      .sort((left, right) => right.block.route.length - left.block.route.length)[0];
+    if (!installation) return { ok: true };
+    if (!installation.requiredCapabilities.every((capability) => authority.grants.has(capability))) {
+      return { ok: false, reasonCode: 'capability_denied' };
+    }
+    return { ok: true, block: installation.block };
+  }
+
+  navigationGroups(context: HostContext, session: HostSessionReadback, now = Date.now()): NavGroup[] {
+    const authority = routeAuthority(context, session, now);
+    if (!authority.ok) return [];
     const groups = new Map<string, NavGroup>();
     for (const installation of this.installations.values()) {
-      if (!installation.requiredCapabilities.every((capability) => grants.has(capability))) continue;
+      if (!installation.requiredCapabilities.every((capability) => authority.grants.has(capability))) continue;
       const { groupId, groupLabel, ...item } = installation.navigation;
       const group = groups.get(groupId) ?? { id: groupId, label: groupLabel, items: [] };
       group.items.push({ ...item });
@@ -64,6 +92,26 @@ export class HostBlockRegistry {
     }
     return [...groups.values()].map((group) => ({ ...group, items: [...group.items] }));
   }
+}
+
+function routeAuthority(
+  context: HostContext,
+  session: HostSessionReadback,
+  now: number,
+): { ok: true; grants: Set<string> } | { ok: false; reasonCode: HostFailureReasonCode } {
+  const expiresAt = Date.parse(session.expiresAt ?? '');
+  if (session.status === 'missing') return { ok: false, reasonCode: 'session_missing' };
+  if (session.status === 'expired') return { ok: false, reasonCode: 'session_expired' };
+  if (session.status === 'revoked') return { ok: false, reasonCode: 'session_revoked' };
+  if (session.status === 'logged_out') return { ok: false, reasonCode: 'session_logged_out' };
+  if (!Number.isFinite(expiresAt) || expiresAt <= now) return { ok: false, reasonCode: 'session_expired' };
+  if (!session.authenticated) return { ok: false, reasonCode: 'semantic_readback_unavailable' };
+  if (session.principalId !== context.principalId || session.principalKind !== context.principalKind) {
+    return { ok: false, reasonCode: 'access_replay_denied' };
+  }
+  if (session.tenantId !== context.tenantId) return { ok: false, reasonCode: 'tenant_scope_mismatch' };
+  if (session.workspaceId !== context.workspaceId) return { ok: false, reasonCode: 'workspace_scope_mismatch' };
+  return { ok: true, grants: new Set(session.capabilities) };
 }
 
 function cloneInstallation(installation: HostBlockInstallation): HostBlockInstallation {

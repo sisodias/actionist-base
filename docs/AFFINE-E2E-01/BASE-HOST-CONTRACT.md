@@ -45,6 +45,14 @@ session_id, access_id, principal_id, tenant_id, workspace_id,
 capabilities, issued_at, expires_at, correlation_id
 ```
 
+Revocation readback:
+
+```text
+schema_version, ok, session_id, access_ids, prior_status,
+current_status, revoked_at, external_revocation_complete,
+correlation_id
+```
+
 Unknown schema versions or malformed required fields fail closed. The donor capability set must equal the Base-issued set after normalization; a subset or superset is denied.
 
 ## Semantic acceptance
@@ -66,6 +74,12 @@ capability_denied, assertion_issue_failed, semantic_readback_unavailable,
 access_replay_denied
 ```
 
+## Access lifecycle and routes
+
+The adapter acquires one access for health and reuses it for mount. Preload does not issue access. Unavailable health, a stale lifecycle, a mount failure, normal unmount, session revocation, and logout all discard the tracked access through the Base access port. A successful revocation receipt is returned only after the configured external revoker has completed; the revoker receives redacted access readback and never the raw assertion.
+
+Base route resolution accepts a full `/w/:workspaceId/...` path plus the selected context and current session readback. It emits a block only when the path workspace equals the selected workspace, the session is active and unexpired, its principal/tenant/workspace exactly match the context, and it grants every installed capability. Navigation visibility uses the same session guard.
+
 ## Remaining source work
 
-This checkpoint does not yet claim external assertion revocation, one-access-per-mount lifecycle tracking, or the final workspace/session-aware route guard. Those remain fail-closed integration work. No package, typecheck, test, build, service, or browser evidence exists for this checkpoint while compute is held.
+The isolated credentialless negative-fixture boundary and exact frozen candidate handoff remain open. No package, typecheck, test, build, service, or browser evidence exists for this checkpoint while compute is held.

@@ -58,9 +58,20 @@ export type HostAssertionClaims = {
 };
 export type HostAccessReadback = HostAssertionClaims & { authenticated: true; assertionPresent: true };
 export type HostAccessGrant = { assertion: string; readback: HostAccessReadback };
+export type HostRevocationReadback = {
+  ok: true;
+  sessionId: string;
+  accessIds: readonly string[];
+  priorStatus: HostSessionReadback['status'];
+  currentStatus: HostSessionReadback['status'];
+  revokedAt: string;
+  externalRevocationComplete: true;
+  correlationId: string;
+};
 export type HostAccessPort = {
   inspect(): Promise<HostSessionReadback>;
   issue(context: HostContext, request: HostAccessRequest): Promise<HostAccessGrant>;
+  revoke(context: HostContext, accessId: string): Promise<HostRevocationReadback>;
 };
 export type DonorSemanticReadback = {
   authenticated: boolean;
@@ -108,6 +119,17 @@ export type HostAccessReadbackWire = {
   issued_at: string;
   expires_at: string;
   assertion_present: true;
+  correlation_id: string;
+};
+export type HostRevocationReadbackWire = {
+  schema_version: typeof AFFINE_ACCESS_WIRE_SCHEMA;
+  ok: true;
+  session_id: string;
+  access_ids: readonly string[];
+  prior_status: HostSessionReadback['status'];
+  current_status: HostSessionReadback['status'];
+  revoked_at: string;
+  external_revocation_complete: true;
   correlation_id: string;
 };
 export type DonorSemanticReadbackWire = Omit<HostAccessReadbackWire, 'authenticated' | 'principal_kind' | 'assertion_present'> & { authenticated: boolean };
@@ -169,6 +191,20 @@ export function serializeDonorSemanticReadback(readback: DonorSemanticReadback):
   };
 }
 
+export function serializeHostRevocationReadback(readback: HostRevocationReadback): HostRevocationReadbackWire {
+  return {
+    schema_version: AFFINE_ACCESS_WIRE_SCHEMA,
+    ok: true,
+    session_id: readback.sessionId,
+    access_ids: [...readback.accessIds],
+    prior_status: readback.priorStatus,
+    current_status: readback.currentStatus,
+    revoked_at: readback.revokedAt,
+    external_revocation_complete: true,
+    correlation_id: readback.correlationId,
+  };
+}
+
 export function parseDonorSemanticReadback(value: unknown): DonorSemanticReadback {
   if (!value || typeof value !== 'object') throw new Error('Donor semantic readback schema mismatch');
   const wire = value as Record<string, unknown>;
@@ -210,7 +246,7 @@ export function parseDonorSemanticReadback(value: unknown): DonorSemanticReadbac
     correlationId: wire.correlation_id as string,
   };
 }
-export type BlockMount = { id: string; version: string; route: string; capability: string; label: string; preload?: (ctx: HostContext, bindings: RuntimeBindings) => Promise<void>; mount(target: HTMLElement, ctx: HostContext, bindings: RuntimeBindings): Promise<Unmount>; health?: (ctx: HostContext, bindings: RuntimeBindings) => Promise<Health> };
+export type BlockMount = { id: string; version: string; route: string; capability: string; label: string; preload?: (ctx: HostContext, bindings: RuntimeBindings) => Promise<void>; mount(target: HTMLElement, ctx: HostContext, bindings: RuntimeBindings): Promise<Unmount>; health?: (ctx: HostContext, bindings: RuntimeBindings) => Promise<Health>; release?: (ctx: HostContext, bindings: RuntimeBindings) => Promise<void> };
 export type NavItem = { id: string; label: string; route: string; icon?: string; blockId?: string; capability?: string };
 export type NavGroup = { id: string; label: string; items: NavItem[]; collapsible?: boolean };
 export type ProductRecipe = {
@@ -327,12 +363,41 @@ export async function cleanupBlockMount(target: HTMLElement, unmount?: Unmount |
 
 export async function runBlockLifecycle(block: BlockMount, target: HTMLElement, context: HostContext, bindings: RuntimeBindings, onHealth: (health: Health) => void, isActive?: () => boolean): Promise<Unmount> {
   const active = () => !isActive || isActive();
+  let releasePromise: Promise<void> | undefined;
+  const release = () => releasePromise ??= block.release?.(context, bindings) ?? Promise.resolve();
   if (!active()) return () => undefined;
   onHealth({ status: 'loading' });
-  await block.preload?.(context, bindings);
-  if (!active()) return () => undefined;
-  const health = await block.health?.(context, bindings);
-  if (health) { onHealth(health); if (health.status === 'unavailable' || health.status === 'error') return () => undefined; }
-  if (!active()) return () => undefined;
-  return block.mount(target, context, bindings);
+  try {
+    await block.preload?.(context, bindings);
+  } catch (error) {
+    await release();
+    throw error;
+  }
+  if (!active()) { await release(); return () => undefined; }
+  let health: Health | undefined;
+  try {
+    health = await block.health?.(context, bindings);
+  } catch (error) {
+    await release();
+    throw error;
+  }
+  if (health) {
+    onHealth(health);
+    if (health.status === 'unavailable' || health.status === 'error') { await release(); return () => undefined; }
+  }
+  if (!active()) { await release(); return () => undefined; }
+  let unmount: Unmount;
+  try {
+    unmount = await block.mount(target, context, bindings);
+  } catch (error) {
+    await release();
+    throw error;
+  }
+  return async () => {
+    try {
+      await unmount();
+    } finally {
+      await release();
+    }
+  };
 }

@@ -6,6 +6,7 @@ import type {
   HostAccessRequest,
   HostAssertionClaims,
   HostContext,
+  HostRevocationReadback,
   HostSessionReadback,
 } from '../host';
 import type { TenantWorkspaceSelection } from '../tenancy/workspace-selection';
@@ -21,7 +22,9 @@ export type HostSessionErrorCode =
   | 'AUDIENCE_DENIED'
   | 'CLIENT_DENIED'
   | 'CAPABILITY_DENIED'
-  | 'ASSERTION_ISSUE_FAILED';
+  | 'ASSERTION_ISSUE_FAILED'
+  | 'ASSERTION_REVOKE_FAILED'
+  | 'ACCESS_REPLAY_DENIED';
 
 export class HostSessionError extends Error {
   constructor(readonly code: HostSessionErrorCode, message: string) {
@@ -38,11 +41,13 @@ export type HostAudiencePolicy = {
 };
 
 export type HostAssertionIssuer = (claims: HostAssertionClaims) => Promise<string>;
+export type HostAssertionRevoker = (readback: HostAccessReadback) => Promise<void>;
 
 export type BaseSessionAuthorityOptions = {
   issuer: string;
   policies: readonly HostAudiencePolicy[];
   issueAssertion: HostAssertionIssuer;
+  revokeAssertion: HostAssertionRevoker;
   now?: () => number;
   createSessionId?: () => string;
   createAccessId?: () => string;
@@ -59,12 +64,19 @@ type SessionRecord = {
   expiresAt: string;
 };
 
+type AccessRecord = {
+  readback: HostAccessReadback;
+  status: 'active' | 'revoked';
+  revokedAt: string | null;
+};
+
 const DEFAULT_SESSION_TTL_MS = 5 * 60_000;
 
 export class BaseSessionAuthority {
   private readonly sessions = new Map<string, SessionRecord>();
   private readonly policies = new Map<string, HostAudiencePolicy>();
   private readonly accessIds = new Set<string>();
+  private readonly accesses = new Map<string, AccessRecord>();
   private readonly now: () => number;
   private readonly createSessionId: () => string;
   private readonly createAccessId: () => string;
@@ -72,6 +84,7 @@ export class BaseSessionAuthority {
 
   constructor(private readonly options: BaseSessionAuthorityOptions) {
     if (!options.issuer.trim()) throw new Error('host session issuer is required');
+    if (typeof options.revokeAssertion !== 'function') throw new Error('host assertion revoker is required');
     this.now = options.now ?? Date.now;
     this.createSessionId = options.createSessionId ?? (() => globalThis.crypto.randomUUID());
     this.createAccessId = options.createAccessId ?? (() => globalThis.crypto.randomUUID());
@@ -139,6 +152,7 @@ export class BaseSessionAuthority {
         }
         return this.issueAccess(sessionId, request, context.correlationId);
       },
+      revoke: async (context, accessId) => this.revokeAccess(sessionId, accessId, context),
     };
   }
 
@@ -193,34 +207,62 @@ export class BaseSessionAuthority {
       this.accessIds.delete(accessId);
       throw new HostSessionError('ASSERTION_ISSUE_FAILED', 'Base assertion issue failed');
     }
-    try {
-      this.requireActive(sessionId);
-    } catch (error) {
-      this.accessIds.delete(accessId);
-      throw error;
-    }
     const readback: HostAccessReadback = {
       ...claims,
       authenticated: true,
       assertionPresent: true,
     };
+    try {
+      this.requireActive(sessionId);
+    } catch (error) {
+      const revokedAt = new Date(this.now()).toISOString();
+      try {
+        await this.options.revokeAssertion({ ...readback, capabilities: [...readback.capabilities] });
+      } catch {
+        this.accesses.set(accessId, { readback, status: 'active', revokedAt: null });
+        throw new HostSessionError('ASSERTION_REVOKE_FAILED', 'Base assertion revoke failed');
+      }
+      this.accesses.set(accessId, { readback, status: 'revoked', revokedAt });
+      throw error;
+    }
+    this.accesses.set(accessId, { readback, status: 'active', revokedAt: null });
     return { assertion, readback };
   }
 
-  revoke(sessionId: string | null | undefined): HostSessionReadback {
-    if (!sessionId) return missingReadback(this.options.issuer, sessionId ?? null);
-    const record = this.sessions.get(sessionId);
-    if (!record) return missingReadback(this.options.issuer, sessionId);
-    if (record.status !== 'logged_out') record.status = 'revoked';
-    return this.readback(record);
+  async revokeAccess(
+    sessionId: string | null | undefined,
+    accessId: string,
+    context: HostContext,
+  ): Promise<HostRevocationReadback> {
+    const normalizedAccessId = accessId.trim();
+    const access = this.accesses.get(normalizedAccessId);
+    if (!access || access.readback.sessionId !== sessionId) {
+      throw new HostSessionError('ACCESS_REPLAY_DENIED', 'Base access replay denied');
+    }
+    if (
+      access.readback.principalId !== context.principalId
+      || access.readback.principalKind !== context.principalKind
+      || access.readback.tenantId !== context.tenantId
+      || access.readback.workspaceId !== context.workspaceId
+      || access.readback.correlationId !== context.correlationId
+    ) {
+      throw new HostSessionError('ACCESS_REPLAY_DENIED', 'Base access replay denied');
+    }
+    const session = this.sessions.get(access.readback.sessionId);
+    if (!session) throw new HostSessionError('SESSION_MISSING', 'Base session missing');
+    this.expireIfNeeded(session);
+    const priorStatus = session.status;
+    const revokedAt = new Date(this.now()).toISOString();
+    await this.revokeAccessRecords([access], revokedAt);
+    return this.revocationReadback(session, [normalizedAccessId], priorStatus, revokedAt, context.correlationId);
   }
 
-  logout(sessionId: string | null | undefined): HostSessionReadback {
-    if (!sessionId) return missingReadback(this.options.issuer, sessionId ?? null);
-    const record = this.sessions.get(sessionId);
-    if (!record) return missingReadback(this.options.issuer, sessionId);
-    record.status = 'logged_out';
-    return this.readback(record);
+  async revoke(sessionId: string | null | undefined, correlationId: string): Promise<HostRevocationReadback> {
+    return this.closeSession(sessionId, 'revoked', correlationId);
+  }
+
+  async logout(sessionId: string | null | undefined, correlationId: string): Promise<HostRevocationReadback> {
+    return this.closeSession(sessionId, 'logged_out', correlationId);
   }
 
   private requireActive(sessionId: string | null | undefined): SessionRecord {
@@ -234,6 +276,63 @@ export class BaseSessionAuthority {
 
   private expireIfNeeded(record: SessionRecord): void {
     if (record.status === 'active' && Date.parse(record.expiresAt) <= this.now()) record.status = 'expired';
+  }
+
+  private async closeSession(
+    sessionId: string | null | undefined,
+    status: 'revoked' | 'logged_out',
+    correlationId: string,
+  ): Promise<HostRevocationReadback> {
+    const normalizedCorrelationId = correlationId.trim();
+    if (!normalizedCorrelationId) throw new HostSessionError('SCOPE_DENIED', 'Base revocation correlation denied');
+    if (!sessionId) throw new HostSessionError('SESSION_MISSING', 'Base session missing');
+    const session = this.sessions.get(sessionId);
+    if (!session) throw new HostSessionError('SESSION_MISSING', 'Base session missing');
+    this.expireIfNeeded(session);
+    const priorStatus = session.status;
+    if (status === 'logged_out' || session.status !== 'logged_out') session.status = status;
+    const accesses = [...this.accesses.values()].filter((access) => access.readback.sessionId === sessionId);
+    const revokedAt = new Date(this.now()).toISOString();
+    await this.revokeAccessRecords(accesses, revokedAt);
+    return this.revocationReadback(
+      session,
+      accesses.map((access) => access.readback.accessId).sort(),
+      priorStatus,
+      revokedAt,
+      normalizedCorrelationId,
+    );
+  }
+
+  private async revokeAccessRecords(accesses: readonly AccessRecord[], revokedAt: string): Promise<void> {
+    for (const access of accesses) {
+      if (access.status === 'revoked') continue;
+      try {
+        await this.options.revokeAssertion({ ...access.readback, capabilities: [...access.readback.capabilities] });
+      } catch {
+        throw new HostSessionError('ASSERTION_REVOKE_FAILED', 'Base assertion revoke failed');
+      }
+      access.status = 'revoked';
+      access.revokedAt = revokedAt;
+    }
+  }
+
+  private revocationReadback(
+    session: SessionRecord,
+    accessIds: readonly string[],
+    priorStatus: HostSessionStatus,
+    revokedAt: string,
+    correlationId: string,
+  ): HostRevocationReadback {
+    return {
+      ok: true,
+      sessionId: session.sessionId,
+      accessIds: [...accessIds],
+      priorStatus,
+      currentStatus: session.status,
+      revokedAt,
+      externalRevocationComplete: true,
+      correlationId,
+    };
   }
 
   private readback(record: SessionRecord): HostSessionReadback {
