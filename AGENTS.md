@@ -8,7 +8,7 @@
 | Where it sits | `~/SISO_Workspace/SISO_Agency/clients/actionmodel/actionist-base` · district SISO_Agency · GitHub sisodias/actionist-base |
 | Owner | not yet assigned; the top Agent Zero (herdr A0, SISO_Agents/agent-zero/siso-firstmate) holds it |
 | Run it | `npm run dev` · `npm run build` · `npm run test` |
-| Write here | .agents/ is this repo's one agent folder (ADR 0015); create what you need there |
+| Write here | `.agents/HANDOFF.md` (state); `.agents/memory/MEMORY.md` (durable facts, one file each plus an index line) |
 | Worktrees | _data/worktrees/actionist-base/&lt;lane&gt; (never beside or inside the repo) |
 | Find anything | `estate where <words>`; the city map is `estate map` |
 <!-- estate:door end -->
