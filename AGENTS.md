@@ -6,7 +6,7 @@
 | Door | |
 |---|---|
 | Where it sits | `~/SISO_Workspace/SISO_Agency/clients/actionmodel/actionist-base` · district SISO_Agency · GitHub sisodias/actionist-base |
-| Owner | not yet assigned; the top Agent Zero (herdr A0, SISO_Agents/agent-zero/siso-firstmate) holds it |
+| Owner | not yet assigned; Agent Zero (SISO_Agents/agent-zero/siso-agent-zero) holds it |
 | Run it | `npm run dev` · `npm run build` · `npm run test` |
 | Write here | `.agents/HANDOFF.md` (state); `.agents/memory/MEMORY.md` (durable facts, one file each plus an index line) |
 | Worktrees | `~/SISO_Workspace/_data/worktrees/actionist-base/<lane>` (never beside or inside the repo) |
